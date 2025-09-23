@@ -1,0 +1,21 @@
+{
+  "name": "dermoscanners",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm:dev:*\"",
+    "dev:client": "npm --workspace=client run dev",
+    "dev:server": "npm --workspace=server run dev",
+    "build": "npm --workspace=client run build",
+    "lint": "echo 'Add linters per workspace'",
+    "start": "npm --workspace=server start"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
+
