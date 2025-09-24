@@ -1,3 +1,4 @@
+//DATABASE FILE
 import mongoose from 'mongoose';
 
 export async function connectDatabase(mongoUri) {

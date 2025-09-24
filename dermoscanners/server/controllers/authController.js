@@ -11,6 +11,7 @@ function sendValidationErrors(req, res) {
   }
 }
 
+//DUPLICATE EMAIL CHECKING
 export async function register(req, res) {
   const invalid = sendValidationErrors(req, res);
   if (invalid) return;
@@ -34,9 +35,11 @@ export async function login(req, res) {
   if (invalid) return;
   const { email, password } = req.body;
   const user = await User.findOne({ email }).select('+password');
-  if (!user) return res.status(401).json({ message: 'Invalid credentials' });
+  //Error message is the same for both cases to avoid giving hints to attackers
+  if (!user) return res.status(401).json({ message: 'Invalid credentials entered' });
   const match = await user.comparePassword(password);
-  if (!match) return res.status(401).json({ message: 'Invalid credentials' });
+  // Error message is the same for both cases to avoid giving hints to attackers
+  if (!match) return res.status(401).json({ message: 'Invalid credentials entered' });
   const accessToken = signAccessToken(user.id);
   const refreshToken = signRefreshToken(user.id);
   return res.json({
@@ -47,6 +50,7 @@ export async function login(req, res) {
 
 export async function refresh(req, res) {
   const { refreshToken } = req.body;
+  // ensure refresh token is provided
   if (!refreshToken) return res.status(400).json({ message: 'Missing refresh token' });
   try {
     const payload = verifyRefreshToken(refreshToken);
@@ -63,14 +67,17 @@ export async function getProfile(req, res) {
   return res.json({ id: user.id, name: user.name, email: user.email, skinType: user.skinType, skinGoals: user.skinGoals });
 }
 
+// ISSUE : As a user, I want to view and edit profile fields, so that I can keep my details updated. #11
 export async function updateProfile(req, res) {
   const invalid = sendValidationErrors(req, res);
+  // Early return if validation errors exist
   if (invalid) return;
   const updates = {};
   const allowed = ['name', 'skinType', 'skinGoals'];
   for (const key of allowed) {
     if (key in req.body) updates[key] = req.body[key];
   }
+  // Prevent email updates through this route
   const user = await User.findByIdAndUpdate(req.user.id, updates, { new: true });
   return res.json({ id: user.id, name: user.name, email: user.email, skinType: user.skinType, skinGoals: user.skinGoals });
 }
