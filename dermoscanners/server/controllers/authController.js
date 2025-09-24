@@ -11,6 +11,7 @@ function sendValidationErrors(req, res) {
   }
 }
 
+//DUPLICATE EMAIL CHECKING
 export async function register(req, res) {
   const invalid = sendValidationErrors(req, res);
   if (invalid) return;

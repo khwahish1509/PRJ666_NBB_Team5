@@ -14,11 +14,12 @@ describe('Auth API', () => {
     await mongoose.disconnect();
   });
 
+  //CHECKING FOR DUPLICATE EMAILS AND WEAK PASSWORDS 
   it('registers and logs in a user', async () => {
     const email = `user${Date.now()}@test.com`;
     const reg = await request(app)
       .post('/api/auth/register')
-      .send({ name: 'Test User', email, password: 'Aa!23456', skinGoals: 'Improve hydration' })
+      .send({ name: 'Test User', email, password: 'Aa!23456', skinGoals: 'Improve hydration' }) //SAMPLE DATA FOR TESTING
       .expect(201);
     expect(reg.body.user.email).toBe(email);
     expect(reg.body.tokens.accessToken).toBeTruthy();
