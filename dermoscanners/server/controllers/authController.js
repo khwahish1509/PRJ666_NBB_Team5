@@ -66,14 +66,17 @@ export async function getProfile(req, res) {
   return res.json({ id: user.id, name: user.name, email: user.email, skinType: user.skinType, skinGoals: user.skinGoals });
 }
 
+// ISSUE : As a user, I want to view and edit profile fields, so that I can keep my details updated. #11
 export async function updateProfile(req, res) {
   const invalid = sendValidationErrors(req, res);
+  // Early return if validation errors exist
   if (invalid) return;
   const updates = {};
   const allowed = ['name', 'skinType', 'skinGoals'];
   for (const key of allowed) {
     if (key in req.body) updates[key] = req.body[key];
   }
+  // Prevent email updates through this route
   const user = await User.findByIdAndUpdate(req.user.id, updates, { new: true });
   return res.json({ id: user.id, name: user.name, email: user.email, skinType: user.skinType, skinGoals: user.skinGoals });
 }
