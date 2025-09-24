@@ -43,7 +43,10 @@ export default function LoginPage() {
           {loading ? 'Signing in...' : 'Sign In'}
         </button>
       </form>
-      <p className="text-sm mt-3">No account? <Link to="/register" className="text-blue-600">Register</Link></p>
+      <div className="text-sm mt-3 space-y-1">
+        <p>No account? <Link to="/register" className="text-blue-600">Register</Link></p>
+        <p><Link to="/forgot-password" className="text-blue-600">Forgot your password?</Link></p>
+      </div>
     </div>
   );
 }

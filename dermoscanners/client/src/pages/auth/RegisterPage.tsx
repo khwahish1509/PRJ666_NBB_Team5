@@ -48,7 +48,7 @@ export default function RegisterPage() {
     <div className="max-w-md mx-auto mt-12 bg-white p-6 rounded shadow">
       <h1 className="text-2xl font-semibold mb-4">Create account</h1>
       {error && <p className="text-red-600 mb-3">{error}</p>}
-      <form onSubmit={onSubmit} className="space-y-4">
+      <form className="space-y-4">
         {step === 1 && (
           <div className="space-y-3">
             <div>
@@ -95,7 +95,7 @@ export default function RegisterPage() {
             </div>
             <div className="flex justify-between">
               <button type="button" onClick={prevStep} className="bg-gray-200 text-gray-800 px-4 py-2 rounded">Back</button>
-              <button type="submit" disabled={loading} className="bg-blue-600 text-white px-4 py-2 rounded">{loading ? 'Creating...' : 'Create account'}</button>
+              <button type="button" onClick={onSubmit} disabled={loading} className="bg-blue-600 text-white px-4 py-2 rounded">{loading ? 'Creating...' : 'Create account'}</button>
             </div>
           </div>
         )}
