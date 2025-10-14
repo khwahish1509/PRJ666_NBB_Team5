@@ -21,6 +21,7 @@ async function fetchProductByBarcode(barcode) {
       error: null
     };
   } catch (err) {
+    console.error('Open Beauty Facts API error:', err);
     return { error: 'API error or network issue.' };
   }
 }

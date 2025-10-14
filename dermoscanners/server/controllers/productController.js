@@ -19,18 +19,28 @@ export async function getProductByBarcode(req, res) {
 
     if (!product) {
       // Try Open Beauty Facts API
-      const { fetchProductByBarcode } = require('../services/openBeautyFactsService');
-      const apiProduct = await fetchProductByBarcode(barcode);
-      if (apiProduct.error) {
-        return res.status(404).json({ 
-          success: false, 
-          message: apiProduct.error
+      try {
+        // Use ES module import
+        const { fetchProductByBarcode } = await import('../services/openBeautyFactsService.js');
+        const apiProduct = await fetchProductByBarcode(barcode);
+        if (apiProduct.error) {
+          console.error('Open Beauty Facts fetch error:', apiProduct.error);
+          return res.status(404).json({ 
+            success: false, 
+            message: apiProduct.error
+          });
+        }
+        return res.json({
+          success: true,
+          data: apiProduct
+        });
+      } catch (err) {
+        console.error('Controller import/fetch error:', err);
+        return res.status(500).json({
+          success: false,
+          message: 'Server error while fetching product from Open Beauty Facts'
         });
       }
-      return res.json({
-        success: true,
-        data: apiProduct
-      });
     }
 
     res.json({
