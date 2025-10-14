@@ -190,25 +190,32 @@ export async function getProductById(req, res) {
  */
 export async function getRecommendations(req, res) {
   try {
-    const { skinType, maxPrice, excludeId } = req.query;
+    /**
+     * Get product by ID or barcode
+     * GET /api/products/:id
+     */
+    export async function getProductById(req, res) {
+      try {
+        const id = req.params.id;
+        let product = null;
 
-    const query = {};
+        // Check if id is a valid ObjectId (24 hex chars)
+        if (id.match(/^[0-9a-fA-F]{24}$/)) {
+          product = await Product.findById(id);
+        } else {
+          product = await Product.findOne({ barcode: id });
+        }
 
-    if (skinType) {
-      query.skinTypes = skinType;
+        if (!product) {
+          return res.status(404).json({ success: false, message: 'Product not found' });
+        }
+
+        res.json({ success: true, data: product });
+      } catch (error) {
+        console.error('Error fetching product:', error);
+        res.status(500).json({ success: false, message: 'Server error while fetching product' });
+      }
     }
-
-    if (maxPrice) {
-      query.price = { $lte: Number(maxPrice) };
-    }
-
-    if (excludeId) {
-      query._id = { $ne: excludeId };
-    }
-
-    // Get products sorted by safety and rating
-    const recommendations = await Product.find(query)
-      .sort({ safetyRating: 1, rating: -1 })
       .limit(10);
 
     res.json({
