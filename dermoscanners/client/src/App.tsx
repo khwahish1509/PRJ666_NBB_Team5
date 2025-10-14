@@ -5,6 +5,10 @@ import RegisterPage from './pages/auth/RegisterPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import DashboardPage from './pages/DashboardPage';
 import ProfilePage from './pages/ProfilePage';
+import ScanPage from './pages/ScanPage';
+import ProductDetailPage from './pages/ProductDetailPage';
+import ComparisonPage from './pages/ComparisonPage';
+import RecommendationsPage from './pages/RecommendationsPage';
 import Layout from './components/layout/Layout';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
@@ -21,6 +25,38 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <DashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/scan"
+            element={
+              <ProtectedRoute>
+                <ScanPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/product/:id"
+            element={
+              <ProtectedRoute>
+                <ProductDetailPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/compare"
+            element={
+              <ProtectedRoute>
+                <ComparisonPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/recommendations"
+            element={
+              <ProtectedRoute>
+                <RecommendationsPage />
               </ProtectedRoute>
             }
           />

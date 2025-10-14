@@ -12,6 +12,7 @@ type User = {
 type AuthContextType = {
   user: User | null;
   accessToken: string | null;
+  isHydrated: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (data: { name: string; email: string; password: string; skinType?: string; skinGoals: string }) => Promise<void>;
   logout: () => void;
@@ -23,6 +24,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem('auth');
@@ -32,6 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setAccessToken(parsed.tokens.accessToken);
       setRefreshToken(parsed.tokens.refreshToken);
     }
+    setIsHydrated(true);
   }, []);
 
   const persist = useCallback((payload: any) => {
@@ -85,7 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => api.interceptors.response.eject(interceptor);
   }, [refreshToken, logout, persist, user]);
 
-  const value = useMemo(() => ({ user, accessToken, login, register, logout }), [user, accessToken, login, register, logout]);
+  const value = useMemo(() => ({ user, accessToken, isHydrated, login, register, logout }), [user, accessToken, isHydrated, login, register, logout]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

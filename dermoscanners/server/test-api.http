@@ -1,0 +1,179 @@
+### Dermoscanners API Testing
+### Use with REST Client extension in VS Code or Thunder Client
+
+@baseUrl = http://localhost:5001
+@token = YOUR_JWT_TOKEN_HERE
+
+### ============================================
+### HEALTH CHECK
+### ============================================
+
+GET {{baseUrl}}/api/health
+
+### ============================================
+### PRODUCT ENDPOINTS
+### ============================================
+
+### Get Product by Barcode
+GET {{baseUrl}}/api/products/barcode/3700123456789
+
+### Search Products
+GET {{baseUrl}}/api/products/search?q=cerave
+
+### List All Products
+GET {{baseUrl}}/api/products
+
+### List Products with Filters
+GET {{baseUrl}}/api/products?category=cleanser&skinType=oily
+
+### List Products Sorted by Price
+GET {{baseUrl}}/api/products?sortBy=price
+
+### Get Recommendations
+GET {{baseUrl}}/api/products/recommendations?skinType=oily&maxPrice=20
+
+### Get Product by ID (replace with actual ID)
+GET {{baseUrl}}/api/products/PRODUCT_ID_HERE
+
+### ============================================
+### AUTH ENDPOINTS
+### ============================================
+
+### Register New User
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "password": "Test123456",
+  "skinType": "oily",
+  "skinGoals": "Reduce oiliness and prevent breakouts"
+}
+
+### Login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "Test123456"
+}
+
+### ============================================
+### SCAN HISTORY ENDPOINTS (Protected)
+### ============================================
+
+### Add to History
+POST {{baseUrl}}/api/history
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "productId": "PRODUCT_ID_HERE"
+}
+
+### Get History
+GET {{baseUrl}}/api/history
+Authorization: Bearer {{token}}
+
+### Delete History Entry
+DELETE {{baseUrl}}/api/history/ENTRY_ID_HERE
+Authorization: Bearer {{token}}
+
+### Clear All History
+DELETE {{baseUrl}}/api/history
+Authorization: Bearer {{token}}
+
+### ============================================
+### INGREDIENT SAFETY ENDPOINTS
+### ============================================
+
+### Analyze Single Ingredient
+POST {{baseUrl}}/api/ingredients/analyze
+Content-Type: application/json
+
+{
+  "ingredient": "Retinol"
+}
+
+### Analyze Product Ingredients
+POST {{baseUrl}}/api/ingredients/analyze-product
+Content-Type: application/json
+
+{
+  "ingredients": ["Retinol", "Hyaluronic Acid", "Niacinamide", "Sodium Lauryl Sulfate"]
+}
+
+### Check Skin Type Compatibility
+POST {{baseUrl}}/api/ingredients/check-compatibility
+Content-Type: application/json
+
+{
+  "ingredient": "Retinol",
+  "skinType": "sensitive"
+}
+
+### Get Ingredient Info
+GET {{baseUrl}}/api/ingredients/info/Hyaluronic%20Acid
+
+### Batch Analyze Ingredients
+POST {{baseUrl}}/api/ingredients/batch-analyze
+Content-Type: application/json
+
+{
+  "ingredients": ["Retinol", "Hyaluronic Acid", "Niacinamide", "Ceramides", "Glycerin"]
+}
+
+### ============================================
+### RECOMMENDATION ENDPOINTS
+### ============================================
+
+### Get Personalized Recommendations
+GET {{baseUrl}}/api/recommendations?skinType=oily&maxPrice=30
+
+### Get Similar Products
+GET {{baseUrl}}/api/recommendations/similar/PRODUCT_ID_HERE
+
+### Get Trending Products
+GET {{baseUrl}}/api/recommendations/trending
+
+### Get Safe Alternatives
+GET {{baseUrl}}/api/recommendations/alternatives/PRODUCT_ID_HERE
+
+### Get Budget Recommendations
+GET {{baseUrl}}/api/recommendations/budget?skinType=oily&maxPrice=20
+
+### ============================================
+### SENTIMENT ANALYSIS ENDPOINTS
+### ============================================
+
+### Analyze Sentiment
+POST {{baseUrl}}/api/sentiment/analyze
+Content-Type: application/json
+
+{
+  "text": "I love this product! It works great and my skin feels amazing!"
+}
+
+### Analyze Negative Sentiment
+POST {{baseUrl}}/api/sentiment/analyze
+Content-Type: application/json
+
+{
+  "text": "This product is terrible. It caused irritation and redness."
+}
+
+### Analyze Multiple Reviews
+POST {{baseUrl}}/api/sentiment/analyze-reviews
+Content-Type: application/json
+
+{
+  "reviews": [
+    { "comment": "Great product! Love it!" },
+    { "comment": "Works well, very gentle" },
+    { "comment": "Not bad, but could be better" },
+    { "comment": "Terrible, caused breakouts" }
+  ]
+}
+

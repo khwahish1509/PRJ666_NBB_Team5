@@ -8,6 +8,10 @@ import rateLimit from 'express-rate-limit';
 import { connectDatabase } from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import productRoutes from './routes/productRoutes.js';
+import scanHistoryRoutes from './routes/scanHistoryRoutes.js';
+import ingredientSafetyRoutes from './routes/ingredientSafetyRoutes.js';
+import recommendationRoutes from './routes/recommendationRoutes.js';
+import sentimentRoutes from './routes/sentimentRoutes.js';
 import { notFoundHandler, errorHandler } from './middleware/errorHandler.js';
 
 dotenv.config();
@@ -30,6 +34,10 @@ app.use('/api/auth', authLimiter);
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/history', scanHistoryRoutes);
+app.use('/api/ingredients', ingredientSafetyRoutes);
+app.use('/api/recommendations', recommendationRoutes);
+app.use('/api/sentiment', sentimentRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });

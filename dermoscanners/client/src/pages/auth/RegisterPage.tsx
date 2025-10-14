@@ -38,7 +38,15 @@ export default function RegisterPage() {
       await register({ name, email, password, skinType, skinGoals });
       navigate('/', { replace: true });
     } catch (err: any) {
-      setError(err?.response?.data?.message || 'Registration failed');
+      const apiMessage = err?.response?.data?.message;
+      const apiErrors = err?.response?.data?.errors;
+      if (Array.isArray(apiErrors) && apiErrors.length > 0) {
+        setError(apiErrors[0]?.msg || 'Registration failed');
+      } else if (apiMessage) {
+        setError(apiMessage);
+      } else {
+        setError('Registration failed');
+      }
     } finally {
       setLoading(false);
     }
