@@ -20,7 +20,6 @@ export async function getProductByBarcode(req, res) {
     if (!product) {
       // Try Open Beauty Facts API
       try {
-        // Use ES module import
         const { fetchProductByBarcode } = await import('../services/openBeautyFactsService.js');
         const apiProduct = await fetchProductByBarcode(barcode);
         if (apiProduct.error) {
@@ -72,31 +71,20 @@ export async function searchProducts(req, res) {
     }
 
     const products = await Product.find({
-      try {
-        const { id } = req.params;
-        let product = null;
+      $or: [
+        { name: { $regex: q, $options: 'i' } },
+        { brand: { $regex: q, $options: 'i' } }
+      ]
+    }).limit(20);
 
-        // Check if id is a valid ObjectId
-        if (/^[0-9a-fA-F]{24}$/.test(id)) {
-          product = await Product.findById(id);
-        } else {
-          // If not, treat it as a barcode
-          product = await Product.findOne({ barcode: id });
-        }
-
-        if (!product) {
-          return res.status(404).json({ success: false, message: 'Product not found' });
-        }
-
-        res.json({ success: true, data: product });
-      } catch (error) {
-        console.error('Error fetching product:', error);
-        res.status(500).json({ success: false, message: 'Server error while fetching product' });
-      }
-    res.status(500).json({ 
-      success: false, 
-      message: 'Server error while searching products' 
+    res.json({
+      success: true,
+      count: products.length,
+      data: products
     });
+  } catch (error) {
+    console.error('Error searching products:', error);
+    res.status(500).json({ success: false, message: 'Server error while searching products' });
   }
 }
 
@@ -123,27 +111,21 @@ export async function listProducts(req, res) {
     let sort = {};
     switch (sortBy) {
       case 'price':
-    export async function getProductById(req, res) {
-      try {
-        const id = req.params.id;
-        let product = null;
+        sort = { price: 1 };
+        break;
+      case 'rating':
+        sort = { rating: -1 };
+        break;
+      default:
+        sort = { rating: -1 };
+    }
 
-        // Check if id is a valid ObjectId (24 hex chars)
-        if (id.match(/^[0-9a-fA-F]{24}$/)) {
-          product = await Product.findById(id);
-        } else {
-          product = await Product.findOne({ barcode: id });
-        }
+    const products = await Product.find(query).sort(sort);
 
-        if (!product) {
-          return res.status(404).json({ success: false, message: 'Product not found' });
-        }
-
-        res.json({ success: true, data: product });
-      } catch (error) {
-        console.error('Error fetching product:', error);
-        res.status(500).json({ success: false, message: 'Server error while fetching product' });
-      }
+    res.json({
+      success: true,
+      count: products.length,
+      data: products
     });
   } catch (error) {
     console.error('Error listing products:', error);
@@ -155,32 +137,40 @@ export async function listProducts(req, res) {
 }
 
 /**
- * Get product by ID
+ * Get product by ID or barcode
  * GET /api/products/:id
  */
 export async function getProductById(req, res) {
   try {
-    const { id } = req.params;
+    const id = req.params.id;
+    let product = null;
 
-    const product = await Product.findById(id);
-
-    if (!product) {
-      return res.status(404).json({ 
-        success: false, 
-        message: 'Product not found' 
-      });
+    // Check if id is a valid ObjectId (24 hex chars)
+    if (id.match(/^[0-9a-fA-F]{24}$/)) {
+      product = await Product.findById(id);
+    } else {
+      product = await Product.findOne({ barcode: id });
     }
 
-    res.json({
-      success: true,
-      data: product
-    });
+    // If not found in DB, try Open Beauty Facts
+    if (!product) {
+      try {
+        const { fetchProductByBarcode } = await import('../services/openBeautyFactsService.js');
+        const apiProduct = await fetchProductByBarcode(id);
+        if (apiProduct.error) {
+          return res.status(404).json({ success: false, message: apiProduct.error });
+        }
+        return res.json({ success: true, data: apiProduct });
+      } catch (err) {
+        console.error('Controller import/fetch error:', err);
+        return res.status(500).json({ success: false, message: 'Server error while fetching product from Open Beauty Facts' });
+      }
+    }
+
+    res.json({ success: true, data: product });
   } catch (error) {
     console.error('Error fetching product:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Server error while fetching product' 
-    });
+    res.status(500).json({ success: false, message: 'Server error while fetching product' });
   }
 }
 
@@ -190,32 +180,25 @@ export async function getProductById(req, res) {
  */
 export async function getRecommendations(req, res) {
   try {
-    /**
-     * Get product by ID or barcode
-     * GET /api/products/:id
-     */
-    export async function getProductById(req, res) {
-      try {
-        const id = req.params.id;
-        let product = null;
+    const { skinType, maxPrice, excludeId } = req.query;
 
-        // Check if id is a valid ObjectId (24 hex chars)
-        if (id.match(/^[0-9a-fA-F]{24}$/)) {
-          product = await Product.findById(id);
-        } else {
-          product = await Product.findOne({ barcode: id });
-        }
+    const query = {};
 
-        if (!product) {
-          return res.status(404).json({ success: false, message: 'Product not found' });
-        }
-
-        res.json({ success: true, data: product });
-      } catch (error) {
-        console.error('Error fetching product:', error);
-        res.status(500).json({ success: false, message: 'Server error while fetching product' });
-      }
+    if (skinType) {
+      query.skinTypes = skinType;
     }
+
+    if (maxPrice) {
+      query.price = { $lte: Number(maxPrice) };
+    }
+
+    if (excludeId) {
+      query._id = { $ne: excludeId };
+    }
+
+    // Get products sorted by safety and rating
+    const recommendations = await Product.find(query)
+      .sort({ safetyRating: 1, rating: -1 })
       .limit(10);
 
     res.json({
@@ -231,4 +214,3 @@ export async function getRecommendations(req, res) {
     });
   }
 }
-
