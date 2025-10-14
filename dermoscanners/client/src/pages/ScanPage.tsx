@@ -27,9 +27,16 @@ export default function ScanPage() {
       const data = await response.json();
 
       if (data.success) {
-        navigate(`/product/${data.data._id}`);
+        // If _id exists, use it; else use barcode
+        if (data.data._id) {
+          navigate(`/product/${data.data._id}`);
+        } else if (data.data.barcode) {
+          navigate(`/product/${data.data.barcode}`);
+        } else {
+          setError('Product found but no valid ID/barcode');
+        }
       } else {
-        setError('Product not found');
+        setError(data.message || 'Product not found');
       }
     } catch (err) {
       setError('Failed to fetch product');

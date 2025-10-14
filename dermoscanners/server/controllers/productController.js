@@ -18,9 +18,18 @@ export async function getProductByBarcode(req, res) {
     const product = await Product.findOne({ barcode });
 
     if (!product) {
-      return res.status(404).json({ 
-        success: false, 
-        message: 'Product not found' 
+      // Try Open Beauty Facts API
+      const { fetchProductByBarcode } = require('../services/openBeautyFactsService');
+      const apiProduct = await fetchProductByBarcode(barcode);
+      if (apiProduct.error) {
+        return res.status(404).json({ 
+          success: false, 
+          message: apiProduct.error
+        });
+      }
+      return res.json({
+        success: true,
+        data: apiProduct
       });
     }
 
