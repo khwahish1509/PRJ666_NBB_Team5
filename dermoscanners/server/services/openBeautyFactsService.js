@@ -1,8 +1,8 @@
-const axios = require('axios');
+import axios from 'axios';
 
 const BASE_URL = 'https://world.openbeautyfacts.org/api/v0/product/';
 
-async function fetchProductByBarcode(barcode) {
+export async function fetchProductByBarcode(barcode) {
   try {
     const response = await axios.get(`${BASE_URL}${barcode}.json`);
     if (!response.data || response.data.status !== 1) {
@@ -25,5 +25,3 @@ async function fetchProductByBarcode(barcode) {
     return { error: 'API error or network issue.' };
   }
 }
-
-module.exports = { fetchProductByBarcode };
