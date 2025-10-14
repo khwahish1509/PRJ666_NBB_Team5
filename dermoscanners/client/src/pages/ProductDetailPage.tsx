@@ -119,27 +119,27 @@ export default function ProductDetailPage() {
             <div className="flex-1">
               <div className="flex items-start justify-between mb-2">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-800">{product.name}</h2>
-                  <p className="text-gray-600">{product.brand}</p>
+                  <h2 className="text-2xl font-bold text-gray-800">{product.name ? product.name : ''}</h2>
+                  <p className="text-gray-600">{product.brand ? product.brand : ''}</p>
                 </div>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getSafetyColor(product.safetyRating)}`}>
-                  {product.safetyRating.toUpperCase()}
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getSafetyColor(product.safetyRating ?? '')}`}>
+                  {(product.safetyRating ?? '').toUpperCase()}
                 </span>
               </div>
 
               <div className="flex items-center gap-4 mb-4">
                 <div className="flex items-center gap-1">
                   <Star className="fill-yellow-400 text-yellow-400" size={20} />
-                  <span className="font-semibold">{product.rating}</span>
+                  <span className="font-semibold">{product.rating ?? ''}</span>
                 </div>
-                <span className="text-2xl font-bold text-indigo-600">${product.price}</span>
+                <span className="text-2xl font-bold text-indigo-600">${product.price ?? ''}</span>
                 {product.volume && <span className="text-gray-500">{product.volume}</span>}
               </div>
 
-              <p className="text-gray-700 mb-4">{product.description}</p>
+              <p className="text-gray-700 mb-4">{product.description ?? ''}</p>
 
               <div className="flex flex-wrap gap-2">
-                {product.skinTypes.map((type) => (
+                {(product.skinTypes ?? []).map((type) => (
                   <span key={type} className="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-sm">
                     {type}
                   </span>
@@ -153,11 +153,11 @@ export default function ProductDetailPage() {
         <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
           <h3 className="text-lg font-semibold mb-4">Ingredients</h3>
           <div className="space-y-2">
-            {product.ingredients.map((ing, idx) => (
+            {(product.ingredients ?? []).map((ing, idx) => (
               <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <span className="font-medium">{ing.name}</span>
-                <span className={`text-sm font-medium ${getRiskColor(ing.riskLevel)}`}>
-                  {ing.riskLevel.toUpperCase()}
+                <span className="font-medium">{ing.name ?? ''}</span>
+                <span className={`text-sm font-medium ${getRiskColor(ing.riskLevel ?? '')}`}>
+                  {(ing.riskLevel ?? '').toUpperCase()}
                 </span>
               </div>
             ))}
@@ -168,20 +168,20 @@ export default function ProductDetailPage() {
         <div className="bg-white rounded-xl shadow-sm p-6">
           <h3 className="text-lg font-semibold mb-4">Reviews</h3>
           <div className="space-y-4">
-            {product.reviews.map((review, idx) => (
+            {(product.reviews ?? []).map((review, idx) => (
               <div key={idx} className="border-b pb-4 last:border-0">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="flex">
                     {[...Array(5)].map((_, i) => (
                       <Star
                         key={i}
-                        className={i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}
+                        className={i < (review.rating ?? 0) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}
                         size={16}
                       />
                     ))}
                   </div>
                 </div>
-                <p className="text-gray-700">{review.comment}</p>
+                <p className="text-gray-700">{review.comment ?? ''}</p>
               </div>
             ))}
           </div>
