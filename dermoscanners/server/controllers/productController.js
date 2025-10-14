@@ -72,19 +72,27 @@ export async function searchProducts(req, res) {
     }
 
     const products = await Product.find({
-      $or: [
-        { name: { $regex: q, $options: 'i' } },
-        { brand: { $regex: q, $options: 'i' } }
-      ]
-    }).limit(20);
+      try {
+        const { id } = req.params;
+        let product = null;
 
-    res.json({
-      success: true,
-      count: products.length,
-      data: products
-    });
-  } catch (error) {
-    console.error('Error searching products:', error);
+        // Check if id is a valid ObjectId
+        if (/^[0-9a-fA-F]{24}$/.test(id)) {
+          product = await Product.findById(id);
+        } else {
+          // If not, treat it as a barcode
+          product = await Product.findOne({ barcode: id });
+        }
+
+        if (!product) {
+          return res.status(404).json({ success: false, message: 'Product not found' });
+        }
+
+        res.json({ success: true, data: product });
+      } catch (error) {
+        console.error('Error fetching product:', error);
+        res.status(500).json({ success: false, message: 'Server error while fetching product' });
+      }
     res.status(500).json({ 
       success: false, 
       message: 'Server error while searching products' 
@@ -115,29 +123,27 @@ export async function listProducts(req, res) {
     let sort = {};
     switch (sortBy) {
       case 'price':
-        sort = { price: 1 };
-        break;
-      case 'price-desc':
-        sort = { price: -1 };
-        break;
-      case 'rating':
-        sort = { rating: -1 };
-        break;
-      case 'safety':
-        sort = { safetyRating: 1 };
-        break;
-      default:
-        sort = { rating: -1 };
-    }
+    export async function getProductById(req, res) {
+      try {
+        const id = req.params.id;
+        let product = null;
 
-    const products = await Product.find(query)
-      .sort(sort)
-      .limit(50);
+        // Check if id is a valid ObjectId (24 hex chars)
+        if (id.match(/^[0-9a-fA-F]{24}$/)) {
+          product = await Product.findById(id);
+        } else {
+          product = await Product.findOne({ barcode: id });
+        }
 
-    res.json({
-      success: true,
-      count: products.length,
-      data: products
+        if (!product) {
+          return res.status(404).json({ success: false, message: 'Product not found' });
+        }
+
+        res.json({ success: true, data: product });
+      } catch (error) {
+        console.error('Error fetching product:', error);
+        res.status(500).json({ success: false, message: 'Server error while fetching product' });
+      }
     });
   } catch (error) {
     console.error('Error listing products:', error);
