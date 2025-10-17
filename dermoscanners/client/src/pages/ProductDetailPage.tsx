@@ -149,20 +149,23 @@ export default function ProductDetailPage() {
           </div>
         </div>
 
-        {/* Ingredients */}
-        <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-          <h3 className="text-lg font-semibold mb-4">Ingredients</h3>
-          <div className="space-y-2">
-            {(product.ingredients ?? []).map((ing, idx) => (
-              <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <span className="font-medium">{ing.name ?? ''}</span>
-                <span className={`text-sm font-medium ${getRiskColor(ing.riskLevel ?? '')}`}>
-                  {(ing.riskLevel ?? '').toUpperCase()}
-                </span>
-              </div>
-            ))}
-          </div>
+        <div className="space-y-2">
+  {Array.isArray(product.ingredients)
+    ? product.ingredients.map((ing, idx) => (
+        <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+          <span className="font-medium">{ing.name ?? ''}</span>
+          <span className={`text-sm font-medium ${getRiskColor(ing.riskLevel ?? '')}`}>
+            {(ing.riskLevel ?? '').toUpperCase()}
+          </span>
         </div>
+      ))
+    : (
+        <div className="text-gray-700">
+          {product.ingredients ?? 'No ingredient info available.'}
+        </div>
+      )
+  }
+</div>
 
         {/* Reviews */}
         <div className="bg-white rounded-xl shadow-sm p-6">
