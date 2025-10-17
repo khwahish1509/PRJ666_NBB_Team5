@@ -28,7 +28,7 @@ const sampleProducts = [
     ],
     sentimentScore: 0.91,
     safetyRating: "safe",
-    imageUrl: "https://via.placeholder.com/300",
+    imageUrl: "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=300&h=300&fit=crop",
     volume: "236ml"
   },
   {
@@ -52,7 +52,7 @@ const sampleProducts = [
     ],
     sentimentScore: 0.69,
     safetyRating: "caution",
-    imageUrl: "https://via.placeholder.com/300",
+    imageUrl: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=300&h=300&fit=crop",
     volume: "236ml"
   },
   {
@@ -77,7 +77,7 @@ const sampleProducts = [
     ],
     sentimentScore: 0.91,
     safetyRating: "safe",
-    imageUrl: "https://via.placeholder.com/300",
+    imageUrl: "https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=300&h=300&fit=crop",
     volume: "355ml"
   },
   {
@@ -101,7 +101,7 @@ const sampleProducts = [
     ],
     sentimentScore: 0.75,
     safetyRating: "safe",
-    imageUrl: "https://via.placeholder.com/300",
+    imageUrl: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=300&h=300&fit=crop",
     volume: "30ml"
   },
   {
@@ -125,7 +125,7 @@ const sampleProducts = [
     ],
     sentimentScore: 0.89,
     safetyRating: "safe",
-    imageUrl: "https://via.placeholder.com/300",
+    imageUrl: "https://images.unsplash.com/photo-1556228852-80c7ca49e55c?w=300&h=300&fit=crop",
     volume: "50ml"
   },
   {
@@ -149,7 +149,7 @@ const sampleProducts = [
     ],
     sentimentScore: 0.69,
     safetyRating: "warning",
-    imageUrl: "https://via.placeholder.com/300",
+    imageUrl: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=300&h=300&fit=crop",
     volume: "30ml"
   },
   {
@@ -174,7 +174,7 @@ const sampleProducts = [
     ],
     sentimentScore: 0.84,
     safetyRating: "safe",
-    imageUrl: "https://via.placeholder.com/300",
+    imageUrl: "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=300&h=300&fit=crop",
     volume: "142g"
   },
   {
@@ -198,6 +198,7 @@ const sampleProducts = [
     ],
     sentimentScore: 0.84,
     safetyRating: "safe",
+    imageUrl: "https://images.unsplash.com/photo-1571875257727-256c39da42af?w=300&h=300&fit=crop",
     imageUrl: "https://via.placeholder.com/300",
     volume: "355ml"
   }

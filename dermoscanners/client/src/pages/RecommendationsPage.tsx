@@ -69,8 +69,8 @@ export default function RecommendationsPage() {
           break;
         case 'safety':
           sortedProducts.sort((a: Product, b: Product) => {
-            const safetyOrder = { safe: 0, caution: 1, warning: 2 };
-            return safetyOrder[a.safetyRating] - safetyOrder[b.safetyRating];
+            const safetyOrder: { [key: string]: number } = { safe: 0, caution: 1, warning: 2 };
+            return (safetyOrder[a.safetyRating] || 3) - (safetyOrder[b.safetyRating] || 3);
           });
           break;
         default:
@@ -246,8 +246,36 @@ export default function RecommendationsPage() {
                     className="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition cursor-pointer"
                   >
                     {/* Image */}
-                    <div className="w-full h-40 bg-gray-200 rounded-lg mb-3 flex items-center justify-center">
-                      <span className="text-gray-400 text-sm">Image</span>
+                    <div className="w-full h-40 bg-gray-200 rounded-lg mb-3 flex items-center justify-center overflow-hidden">
+                      {product.imageUrl ? (
+                        <img 
+                          src={product.imageUrl} 
+                          alt={product.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.currentTarget;
+                            target.style.display = 'none';
+                            const parent = target.parentElement;
+                            if (parent) {
+                              parent.innerHTML = `
+                                <div class="flex flex-col items-center justify-center p-4">
+                                  <svg class="w-12 h-12 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                  </svg>
+                                  <span class="text-xs text-gray-500 text-center">${product.name}</span>
+                                </div>
+                              `;
+                            }
+                          }}
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center p-4">
+                          <svg className="w-12 h-12 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <span className="text-xs text-gray-500 text-center">{product.name}</span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Info */}

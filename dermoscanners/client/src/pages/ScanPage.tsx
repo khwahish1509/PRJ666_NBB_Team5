@@ -9,8 +9,13 @@ import { Camera, Search, Loader2 } from 'lucide-react';
 
 export default function ScanPage() {
   const [barcode, setBarcode] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [cameraAvailable, setCameraAvailable] = useState(true);
+  const [cameraError, setCameraError] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [showSearchResults, setShowSearchResults] = useState(false);
   const navigate = useNavigate();
 
   const handleScan = async () => {
@@ -21,6 +26,7 @@ export default function ScanPage() {
 
     setLoading(true);
     setError('');
+    setShowSearchResults(false);
 
     try {
       const response = await fetch(`http://localhost:5001/api/products/barcode/${barcode}`);
@@ -45,9 +51,66 @@ export default function ScanPage() {
     }
   };
 
-  const handleCameraScan = () => {
-    // Placeholder for camera integration
-    alert('Camera scan - Coming soon!');
+  const handleSearch = async () => {
+    if (!searchQuery.trim() || searchQuery.trim().length < 2) {
+      setError('Please enter at least 2 characters to search');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    setShowSearchResults(false);
+
+    try {
+      const response = await fetch(`http://localhost:5001/api/products/search?q=${encodeURIComponent(searchQuery)}`);
+      const data = await response.json();
+
+      if (data.success && data.data.length > 0) {
+        setSearchResults(data.data);
+        setShowSearchResults(true);
+      } else {
+        setError('No products found matching your search');
+      }
+    } catch (err) {
+      setError('Failed to search products');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCameraScan = async () => {
+    setCameraError('');
+    
+    try {
+      // Check if camera API is available
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setCameraAvailable(false);
+        setCameraError('Camera API not supported in this browser');
+        return;
+      }
+
+      // Request camera permission
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: 'environment' } 
+      });
+      
+      // Stop the stream immediately (we just wanted to check permission)
+      stream.getTracks().forEach(track => track.stop());
+      
+      // If we get here, permission was granted
+      alert('Camera scan feature coming soon! For now, please use manual entry.');
+      
+    } catch (err: any) {
+      setCameraAvailable(false);
+      
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        setCameraError('Camera permission denied. Please use manual entry below.');
+      } else if (err.name === 'NotFoundError') {
+        setCameraError('No camera found on this device. Please use manual entry below.');
+      } else {
+        setCameraError('Unable to access camera. Please use manual entry below.');
+      }
+    }
   };
 
   return (
@@ -67,6 +130,13 @@ export default function ScanPage() {
           <Camera size={24} />
           <span className="text-lg font-medium">Scan with Camera</span>
         </button>
+
+        {/* Camera Error Message */}
+        {cameraError && (
+          <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg mb-4 text-sm">
+            {cameraError}
+          </div>
+        )}
 
         {/* Divider */}
         <div className="relative mb-6">
@@ -94,12 +164,6 @@ export default function ScanPage() {
             />
           </div>
 
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-              {error}
-            </div>
-          )}
-
           <button
             onClick={handleScan}
             disabled={loading}
@@ -113,11 +177,80 @@ export default function ScanPage() {
             ) : (
               <>
                 <Search size={20} />
-                <span>Search Product</span>
+                <span>Search by Barcode</span>
               </>
             )}
           </button>
+
+          {/* Divider */}
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-gradient-to-br from-blue-50 to-indigo-100 text-gray-500">OR SEARCH BY NAME</span>
+            </div>
+          </div>
+
+          {/* Search by Name */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Search Product Name
+            </label>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="e.g., moisturizer, cleanser..."
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+            />
+          </div>
+
+          <button
+            onClick={handleSearch}
+            disabled={loading}
+            className="w-full bg-purple-600 text-white py-3 rounded-lg flex items-center justify-center gap-2 hover:bg-purple-700 transition disabled:opacity-50"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="animate-spin" size={20} />
+                <span>Searching...</span>
+              </>
+            ) : (
+              <>
+                <Search size={20} />
+                <span>Search by Name</span>
+              </>
+            )}
+          </button>
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+              {error}
+            </div>
+          )}
         </div>
+
+        {/* Search Results */}
+        {showSearchResults && searchResults.length > 0 && (
+          <div className="mt-6 bg-white rounded-lg p-4 max-h-96 overflow-y-auto">
+            <h3 className="font-semibold text-gray-800 mb-3">Search Results ({searchResults.length})</h3>
+            <div className="space-y-2">
+              {searchResults.map((product) => (
+                <button
+                  key={product._id}
+                  onClick={() => navigate(`/product/${product._id}`)}
+                  className="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition"
+                >
+                  <div className="font-medium text-gray-800">{product.name}</div>
+                  <div className="text-sm text-gray-600">{product.brand}</div>
+                  <div className="text-sm text-indigo-600 font-semibold mt-1">${product.price}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Quick Examples */}
         <div className="mt-8 p-4 bg-white rounded-lg">

@@ -51,6 +51,14 @@ export default function ComparisonPage() {
 
   const removeProduct = (id: string) => {
     setProducts(products.filter(p => p._id !== id));
+    if (products.length === 1) {
+      setError('');
+    }
+  };
+
+  const clearComparison = () => {
+    setProducts([]);
+    setError('');
   };
 
   const getSafetyColor = (rating: string) => {
@@ -112,15 +120,33 @@ export default function ComparisonPage() {
             </div>
           )}
 
+          {products.length === 1 && (
+            <div className="mt-4 bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-2 rounded-lg">
+              Add at least one more product to start comparing
+            </div>
+          )}
+
           {products.length === 0 && (
             <div className="mt-4 text-center text-gray-500">
               Add products to compare (max 3)
             </div>
           )}
+
+          {products.length > 0 && (
+            <div className="mt-4 flex justify-between items-center">
+              <span className="text-sm text-gray-600">{products.length} product(s) added</span>
+              <button
+                onClick={clearComparison}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+              >
+                Clear All
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Comparison Table */}
-        {products.length > 0 && (
+        {products.length >= 2 && (
           <div className="bg-white rounded-xl shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">

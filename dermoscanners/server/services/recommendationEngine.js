@@ -8,6 +8,7 @@ import ScanHistory from '../models/ScanHistory.js';
 
 /**
  * Calculate recommendation score for a product
+ * Enhanced with better weighting and history analysis
  * @param {Object} product - Product object
  * @param {Object} userProfile - User profile { skinType, skinGoals }
  * @param {Array} history - User's scan history
@@ -15,35 +16,69 @@ import ScanHistory from '../models/ScanHistory.js';
  */
 function calculateScore(product, userProfile, history = []) {
   let score = 0;
+  let maxScore = 0;
 
-  // Base score from rating (0-40 points)
-  score += (product.rating || 0) * 8;
+  // Rating score (0-35 points) - weighted heavily
+  const ratingScore = (product.rating || 0) * 7;
+  score += ratingScore;
+  maxScore += 35;
 
-  // Skin type match (0-30 points)
+  // Skin type match (0-25 points)
   if (userProfile?.skinType && product.skinTypes?.includes(userProfile.skinType)) {
-    score += 30;
+    score += 25; // Perfect match
+  } else if (product.skinTypes?.includes('all') || product.skinTypes?.includes('normal')) {
+    score += 15; // Universal products
   } else if (product.skinTypes?.length > 0) {
-    score += 10; // Partial match
+    score += 5; // Has skin type info but doesn't match
   }
+  maxScore += 25;
 
-  // Safety rating (0-20 points)
-  const safetyScores = { safe: 20, caution: 10, warning: 0 };
-  score += safetyScores[product.safetyRating] || 0;
+  // Safety rating (0-25 points) - critical factor
+  const safetyScores = { safe: 25, caution: 12, warning: 0 };
+  score += safetyScores[product.safetyRating] || 5;
+  maxScore += 25;
 
   // Sentiment score (0-10 points)
   score += (product.sentimentScore || 0.5) * 10;
+  maxScore += 10;
 
-  // Diversity bonus - avoid recommending recently scanned products
-  const recentlyScanned = history.some(h => h.productId.toString() === product._id.toString());
-  if (recentlyScanned) {
-    score *= 0.3; // Reduce score by 70%
+  // Price reasonability (0-5 points) - bonus for good value
+  if (product.price && product.price < 30) {
+    score += 5; // Affordable
+  } else if (product.price && product.price < 50) {
+    score += 3; // Mid-range
+  } else {
+    score += 1; // Premium
+  }
+  maxScore += 5;
+
+  // History-based adjustments
+  if (history && history.length > 0) {
+    // Check if recently scanned (penalize)
+    const recentlyScanned = history.slice(0, 10).some(h => 
+      h.productId && h.productId.toString() === product._id.toString()
+    );
+    if (recentlyScanned) {
+      score *= 0.4; // Reduce score by 60% for recently viewed items
+    }
+
+    // Category preference (bonus for frequently scanned categories)
+    const categoryCount = history.filter(h => 
+      h.productSnapshot?.category === product.category
+    ).length;
+    if (categoryCount > 2) {
+      score *= 1.15; // 15% bonus for preferred categories
+    }
   }
 
-  return Math.min(100, Math.max(0, score));
+  // Normalize to 0-100 scale
+  const normalizedScore = (score / maxScore) * 100;
+  return Math.min(100, Math.max(0, normalizedScore));
 }
 
 /**
  * Get personalized recommendations
+ * Enhanced with fallback logic and better filtering
  * @param {Object} options - { userId, skinType, maxPrice, limit, excludeProductId }
  * @returns {Promise<Array>} Recommended products with scores
  */
@@ -57,35 +92,71 @@ export async function getRecommendations(options = {}) {
     excludeProductId = null
   } = options;
 
-  // Build query
-  const query = {};
-  if (skinType) query.skinTypes = skinType;
-  if (maxPrice) query.price = { $lte: Number(maxPrice) };
-  if (category) query.category = category;
-  if (excludeProductId) query._id = { $ne: excludeProductId };
+  try {
+    // Build query with fallback logic
+    const query = {};
+    if (skinType) query.skinTypes = skinType;
+    if (maxPrice) query.price = { $lte: Number(maxPrice) };
+    if (category) query.category = category;
+    if (excludeProductId) query._id = { $ne: excludeProductId };
 
-  // Get products
-  const products = await Product.find(query).lean();
+    // Get products
+    let products = await Product.find(query).lean();
 
-  // Get user history if userId provided
-  let history = [];
-  if (userId) {
-    history = await ScanHistory.find({ userId })
-      .sort({ scannedAt: -1 })
-      .limit(50)
+    // Fallback 1: If no products found with strict filters, relax skin type
+    if (products.length === 0 && skinType) {
+      delete query.skinTypes;
+      products = await Product.find(query).lean();
+    }
+
+    // Fallback 2: If still no products, get top-rated safe products
+    if (products.length === 0) {
+      products = await Product.find({
+        rating: { $gte: 4.0 },
+        safetyRating: { $ne: 'warning' }
+      })
+      .sort({ rating: -1 })
+      .limit(limit * 2)
       .lean();
+    }
+
+    // Fallback 3: If database is empty, return empty array with message
+    if (products.length === 0) {
+      console.warn('No products found in database for recommendations');
+      return [];
+    }
+
+    // Get user history if userId provided
+    let history = [];
+    if (userId) {
+      try {
+        history = await ScanHistory.find({ userId })
+          .sort({ scannedAt: -1 })
+          .limit(50)
+          .lean();
+      } catch (err) {
+        console.error('Error fetching user history:', err);
+        // Continue without history
+      }
+    }
+
+    // Calculate scores
+    const scoredProducts = products.map(product => ({
+      ...product,
+      score: calculateScore(product, { skinType }, history)
+    }));
+
+    // Sort by score (descending) and return top results
+    const topProducts = scoredProducts
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit);
+
+    return topProducts;
+  } catch (error) {
+    console.error('Error generating recommendations:', error);
+    // Return empty array on error
+    return [];
   }
-
-  // Calculate scores
-  const scoredProducts = products.map(product => ({
-    ...product,
-    score: calculateScore(product, { skinType }, history)
-  }));
-
-  // Sort by score (descending) and return top results
-  return scoredProducts
-    .sort((a, b) => b.score - a.score)
-    .slice(0, limit);
 }
 
 /**

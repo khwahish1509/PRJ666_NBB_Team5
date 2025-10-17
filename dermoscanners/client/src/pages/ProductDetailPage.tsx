@@ -111,83 +111,149 @@ export default function ProductDetailPage() {
         <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
           <div className="flex gap-6">
             {/* Image */}
-            <div className="w-32 h-32 bg-gray-200 rounded-lg flex items-center justify-center">
-              <span className="text-gray-400 text-sm">Image</span>
+            <div className="w-32 h-32 bg-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
+              {product.imageUrl ? (
+                <img 
+                  src={product.imageUrl} 
+                  alt={product.name || 'Product'} 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.parentElement!.innerHTML = '<span class="text-gray-400 text-sm">No Image</span>';
+                  }}
+                />
+              ) : (
+                <span className="text-gray-400 text-sm">No Image</span>
+              )}
             </div>
 
             {/* Info */}
             <div className="flex-1">
               <div className="flex items-start justify-between mb-2">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-800">{product.name ? product.name : ''}</h2>
-                  <p className="text-gray-600">{product.brand ? product.brand : ''}</p>
+                  <h2 className="text-2xl font-bold text-gray-800">{product.name || 'Unknown Product'}</h2>
+                  <p className="text-gray-600">{product.brand || 'Unknown Brand'}</p>
                 </div>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getSafetyColor(product.safetyRating ?? '')}`}>
-                  {(product.safetyRating ?? '').toUpperCase()}
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getSafetyColor(product.safetyRating || 'unknown')}`}>
+                  {(product.safetyRating || 'UNKNOWN').toUpperCase()}
                 </span>
               </div>
 
               <div className="flex items-center gap-4 mb-4">
-                <div className="flex items-center gap-1">
-                  <Star className="fill-yellow-400 text-yellow-400" size={20} />
-                  <span className="font-semibold">{product.rating ?? ''}</span>
-                </div>
-                <span className="text-2xl font-bold text-indigo-600">${product.price ?? ''}</span>
+                {product.rating && (
+                  <div className="flex items-center gap-1">
+                    <Star className="fill-yellow-400 text-yellow-400" size={20} />
+                    <span className="font-semibold">{product.rating}</span>
+                  </div>
+                )}
+                {product.price && (
+                  <span className="text-2xl font-bold text-indigo-600">${product.price}</span>
+                )}
+                {!product.price && (
+                  <span className="text-gray-500">Price not available</span>
+                )}
                 {product.volume && <span className="text-gray-500">{product.volume}</span>}
               </div>
 
-              <p className="text-gray-700 mb-4">{product.description ?? ''}</p>
+              <p className="text-gray-700 mb-4">
+                {product.description || 'No description available for this product.'}
+              </p>
 
               <div className="flex flex-wrap gap-2">
-                {(product.skinTypes ?? []).map((type) => (
-                  <span key={type} className="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-sm">
-                    {type}
-                  </span>
-                ))}
+                {product.skinTypes && product.skinTypes.length > 0 ? (
+                  product.skinTypes.map((type) => (
+                    <span key={type} className="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-sm">
+                      {type}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-sm text-gray-500">No skin type information</span>
+                )}
               </div>
             </div>
           </div>
         </div>
 
-        <div className="space-y-2">
-  {Array.isArray(product.ingredients)
-    ? product.ingredients.map((ing, idx) => (
-        <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-          <span className="font-medium">{ing.name ?? ''}</span>
-          <span className={`text-sm font-medium ${getRiskColor(ing.riskLevel ?? '')}`}>
-            {(ing.riskLevel ?? '').toUpperCase()}
-          </span>
+        {/* Ingredients */}
+        <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+          <h3 className="text-lg font-semibold mb-4">Ingredients Analysis</h3>
+          {!product.ingredients || (Array.isArray(product.ingredients) && product.ingredients.length === 0) ? (
+            <div className="text-center py-8 text-gray-500">
+              <AlertTriangle className="mx-auto mb-2" size={32} />
+              <p>No ingredient information available</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {Array.isArray(product.ingredients) ? (
+                product.ingredients.map((ing, idx) => (
+                  <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div>
+                      <span className="font-medium">{ing.name || 'Unknown Ingredient'}</span>
+                      {ing.warnings && ing.warnings.length > 0 && (
+                        <p className="text-xs text-gray-600 mt-1">{ing.warnings.join(', ')}</p>
+                      )}
+                    </div>
+                    <span className={`text-sm font-medium ${getRiskColor(ing.riskLevel || 'unknown')}`}>
+                      {(ing.riskLevel || 'unknown').toUpperCase()}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <div className="text-gray-700 p-3 bg-gray-50 rounded-lg">
+                  {typeof product.ingredients === 'string' 
+                    ? product.ingredients 
+                    : 'Ingredient information format not supported'}
+                </div>
+              )}
+            </div>
+          )}
         </div>
-      ))
-    : (
-        <div className="text-gray-700">
-          {product.ingredients ?? 'No ingredient info available.'}
-        </div>
-      )
-  }
-</div>
 
         {/* Reviews */}
         <div className="bg-white rounded-xl shadow-sm p-6">
-          <h3 className="text-lg font-semibold mb-4">Reviews</h3>
-          <div className="space-y-4">
-            {(product.reviews ?? []).map((review, idx) => (
-              <div key={idx} className="border-b pb-4 last:border-0">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="flex">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className={i < (review.rating ?? 0) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}
-                        size={16}
-                      />
-                    ))}
+          <h3 className="text-lg font-semibold mb-4">Customer Reviews</h3>
+          {!product.reviews || product.reviews.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <p>No reviews available yet</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {product.reviews.map((review, idx) => (
+                <div key={idx} className="border-b pb-4 last:border-0">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="flex">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={i < (review.rating || 0) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}
+                          size={16}
+                        />
+                      ))}
+                    </div>
                   </div>
+                  <p className="text-gray-700">{review.comment || 'No comment provided'}</p>
                 </div>
-                <p className="text-gray-700">{review.comment ?? ''}</p>
+              ))}
+            </div>
+          )}
+
+          {/* Sentiment Score */}
+          {product.sentimentScore !== undefined && (
+            <div className="mt-6 pt-6 border-t">
+              <h4 className="text-sm font-medium text-gray-700 mb-2">Overall Sentiment</h4>
+              <div className="flex items-center gap-3">
+                <div className="flex-1 bg-gray-200 rounded-full h-3">
+                  <div
+                    className="bg-indigo-600 h-3 rounded-full transition-all"
+                    style={{ width: `${product.sentimentScore * 100}%` }}
+                  />
+                </div>
+                <span className="text-sm font-semibold text-gray-700">
+                  {(product.sentimentScore * 100).toFixed(0)}%
+                </span>
               </div>
-            ))}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
