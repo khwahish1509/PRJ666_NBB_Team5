@@ -6,17 +6,23 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
     setMessage(null);
+    setToken(null);
     setLoading(true);
     
     try {
       const response = await api.post('/auth/reset', { email });
       setMessage(response.data.message || 'If account exists, an email has been sent');
+      // Display token for testing (since email is not configured)
+      if (response.data.token) {
+        setToken(response.data.token);
+      }
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Failed to send reset email');
     } finally {
@@ -31,6 +37,18 @@ export default function ForgotPasswordPage() {
       
       {error && <p className="text-red-600 mb-3">{error}</p>}
       {message && <p className="text-green-600 mb-3">{message}</p>}
+      
+      {token && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded p-3 mb-4">
+          <p className="text-sm font-semibold mb-2">Reset Token (for testing):</p>
+          <p className="text-xs font-mono bg-white p-2 rounded break-all">{token}</p>
+          <p className="text-xs text-gray-600 mt-2">
+            Use this link: <Link to={`/reset-password/${token}`} className="text-blue-600 underline">
+              Reset Password
+            </Link>
+          </p>
+        </div>
+      )}
       
       <form onSubmit={onSubmit} className="space-y-4">
         <div>
