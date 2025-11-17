@@ -54,6 +54,21 @@ app.use('/api/recommendations', recommendationRoutes);
 app.use('/api/sentiment', sentimentRoutes);
 app.use('/api/ai', aiRoutes);
 
+// Root route
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'DermoScanner API',
+    version: '1.0.0',
+    endpoints: {
+      health: '/api/health',
+      auth: '/api/auth',
+      products: '/api/products',
+      scans: '/api/scans',
+      ai: '/api/ai'
+    }
+  });
+});
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
@@ -76,9 +91,13 @@ async function start() {
   }
 }
 
-
-
-if (process.env.NODE_ENV !== 'test') {
+// For Vercel serverless deployment
+if (process.env.VERCEL) {
+  connectDatabase(process.env.MONGO_URI).catch(err => {
+    console.error('Failed to connect to database:', err);
+  });
+} else if (process.env.NODE_ENV !== 'test') {
+  // Local development
   start();
 }
 
