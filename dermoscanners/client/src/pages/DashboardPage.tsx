@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { getScans } from '../utils/scanStorage';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Camera, GitCompare, TrendingUp, Sparkles, Trash2, Clock } from 'lucide-react';
@@ -24,9 +25,18 @@ export default function DashboardPage() {
   const navigate = useNavigate();
   const [scanHistory, setScanHistory] = useState<ScanHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
+  // Local skin scans stored in localStorage (AI scan results)
+  const [localSkinScans, setLocalSkinScans] = useState<any[]>([]);
 
   useEffect(() => {
     fetchHistory();
+    // Load local skin scans for dashboard preview
+    try {
+      const local = getScans();
+      setLocalSkinScans(local.slice(0, 5));
+    } catch (err) {
+      console.error('Error loading local skin scans for dashboard:', err);
+    }
   }, []);
 
   const fetchHistory = async () => {
@@ -197,19 +207,45 @@ export default function DashboardPage() {
         {loading ? (
           <LoadingSpinner message="Loading history..." />
         ) : scanHistory.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="bg-gradient-to-br from-gray-100 to-gray-200 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Clock size={40} className="text-gray-400" />
+          // If there are no server-backed product scans, show local skin scans (from localStorage)
+          localSkinScans.length === 0 ? (
+            <div className="text-center py-16">
+              <div className="bg-gradient-to-br from-gray-100 to-gray-200 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Clock size={40} className="text-gray-400" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-700 mb-2">No Scans Yet</h3>
+              <p className="text-gray-500 mb-6">Start scanning to see your history</p>
+              <button
+                onClick={() => navigate('/scan')}
+                className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
+              >
+                Start Scanning
+              </button>
             </div>
-            <h3 className="text-xl font-bold text-gray-700 mb-2">No Scans Yet</h3>
-            <p className="text-gray-500 mb-6">Start scanning to see your history</p>
-            <button
-              onClick={() => navigate('/scan')}
-              className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
-            >
-              Start Scanning
-            </button>
-          </div>
+          ) : (
+            <div className="space-y-3">
+              {localSkinScans.map((scan) => (
+                <div
+                  key={scan.id}
+                  className="flex items-center justify-between p-5 border-2 border-gray-100 rounded-xl hover:border-indigo-200 hover:shadow-lg transition-all group cursor-pointer"
+                  onClick={() => navigate('/history')}
+                >
+                  <div className="flex-1">
+                    <h3 className="font-bold text-gray-800 group-hover:text-indigo-600 transition-colors">
+                      {scan.result}
+                    </h3>
+                    <p className="text-sm text-gray-600 mt-1">Local scan</p>
+                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full inline-block mt-2">
+                      {new Date(scan.timestamp).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="w-20 h-20 ml-4">
+                    <img src={scan.imageUrl} alt="scan" className="w-20 h-20 object-cover rounded-lg border" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
         ) : (
           <div className="space-y-3">
             {scanHistory.slice(0, 5).map((item) => (
@@ -251,6 +287,8 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+
+      
 
       <style>{`
         @keyframes fadeIn {
