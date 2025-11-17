@@ -1,6 +1,6 @@
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Home, Scan, History, Sparkles, GitCompare, User, LogOut } from 'lucide-react';
+import { Home, Scan, History, Sparkles, GitCompare, User, LogOut, BookOpen } from 'lucide-react';
 
 export default function Layout() {
   const { user, logout } = useAuth();
@@ -89,13 +89,13 @@ export default function Layout() {
                 className={({ isActive }) => `
                   flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all duration-300
                   ${isActive 
-                    ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg scale-105' 
+                    ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg scale-105' 
                     : 'text-gray-700 hover:bg-white hover:shadow-md'
                   }
                 `}
               >
-                <Sparkles size={18} />
-                <span>Products</span>
+                <BookOpen size={18} />
+                <span>Health Tips</span>
               </NavLink>
               
               <NavLink 

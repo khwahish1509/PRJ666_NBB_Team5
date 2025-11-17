@@ -1,10 +1,11 @@
 /**
- * RecommendationPanel Component - Enhanced UI
- * Displays beautiful health recommendations based on scan results
+ * RecommendationPanel Component - ENHANCED WITH MAJOR VISUAL IMPACT
+ * Issue #54: Recommendation Data File Update
+ * Displays personalized health recommendations with version tracking and export features
  */
 
 import { useState, useEffect } from 'react';
-import { Info, AlertCircle, CheckCircle2, Lightbulb, Heart, Shield, Calendar, Stethoscope } from 'lucide-react';
+import { Info, AlertCircle, CheckCircle2, Lightbulb, Heart, Shield, Calendar, Stethoscope, Download, Share2, BookOpen, Clock, TrendingUp } from 'lucide-react';
 import api from '../../services/api';
 
 export interface RecommendationPanelProps {
@@ -23,12 +24,16 @@ interface RecommendationsData {
     suspicious: Recommendation;
     malignant: Recommendation;
   };
+  lastUpdated?: string;
 }
 
 export default function RecommendationPanel({ result }: RecommendationPanelProps) {
   const [recommendation, setRecommendation] = useState<Recommendation | null>(null);
+  const [version, setVersion] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [showExportSuccess, setShowExportSuccess] = useState(false);
+  const [checkedTips, setCheckedTips] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     const fetchRecommendations = async () => {
@@ -42,6 +47,7 @@ export default function RecommendationPanel({ result }: RecommendationPanelProps
         // Map result type to corresponding recommendation
         const recommendationData = response.data.recommendations[result];
         setRecommendation(recommendationData);
+        setVersion(response.data.version);
       } catch (err) {
         console.error('Failed to fetch recommendations:', err);
         setError(true);
@@ -52,6 +58,70 @@ export default function RecommendationPanel({ result }: RecommendationPanelProps
 
     fetchRecommendations();
   }, [result]);
+
+  // Export recommendations as PDF/Text
+  const handleExport = () => {
+    if (!recommendation) return;
+    
+    const content = `
+DermoScanner Health Recommendations
+Version: ${version}
+Risk Level: ${recommendation.title}
+Generated: ${new Date().toLocaleDateString()}
+
+PERSONALIZED RECOMMENDATIONS:
+${recommendation.tips.map((tip, i) => `${i + 1}. ${tip}`).join('\n')}
+
+DISCLAIMER: These recommendations are for informational purposes only and do not constitute medical advice.
+Always consult with a qualified healthcare professional for proper diagnosis and treatment.
+    `.trim();
+
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `dermoscanner-recommendations-${result}-${Date.now()}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    setShowExportSuccess(true);
+    setTimeout(() => setShowExportSuccess(false), 3000);
+  };
+
+  // Share recommendations
+  const handleShare = async () => {
+    if (!recommendation) return;
+    
+    const shareText = `DermoScanner Recommendations (${recommendation.title})\n\n${recommendation.tips.map((tip, i) => `${i + 1}. ${tip}`).join('\n')}`;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'DermoScanner Health Recommendations',
+          text: shareText,
+        });
+      } catch (err) {
+        console.log('Share cancelled');
+      }
+    } else {
+      // Fallback: Copy to clipboard
+      navigator.clipboard.writeText(shareText);
+      alert('Recommendations copied to clipboard!');
+    }
+  };
+
+  // Toggle tip completion
+  const toggleTipCheck = (index: number) => {
+    const newChecked = new Set(checkedTips);
+    if (newChecked.has(index)) {
+      newChecked.delete(index);
+    } else {
+      newChecked.add(index);
+    }
+    setCheckedTips(newChecked);
+  };
 
   // Enhanced configuration for each result type
   const resultConfig = {
@@ -123,9 +193,19 @@ export default function RecommendationPanel({ result }: RecommendationPanelProps
     );
   }
 
-  // Success state - display recommendations with enhanced UI
+  // Success state - display recommendations with MAJOR ENHANCED UI
   return (
-    <div className="w-full max-w-[650px] mx-auto mt-8">
+    <div className="w-full max-w-[700px] mx-auto mt-8">
+      {/* Export Success Toast */}
+      {showExportSuccess && (
+        <div className="fixed top-4 right-4 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-2xl animate-bounce">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 size={20} />
+            <span className="font-semibold">Recommendations exported successfully!</span>
+          </div>
+        </div>
+      )}
+
       <div 
         className={`
           recommendation-panel-entrance
@@ -135,37 +215,102 @@ export default function RecommendationPanel({ result }: RecommendationPanelProps
           hover:shadow-3xl transition-all duration-300
         `}
       >
-        {/* Gradient Header */}
+        {/* Enhanced Gradient Header with Version Badge */}
         <div className={`${config.headerBg} px-6 py-5 relative overflow-hidden`}>
           <div className="absolute inset-0 opacity-20">
             <div className="absolute inset-0 bg-pattern"></div>
           </div>
-          <div className="relative z-10 flex items-center gap-4">
-            <div className="bg-white/20 backdrop-blur-sm p-3 rounded-xl">
-              <Icon className="text-white" size={28} strokeWidth={2.5} />
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-4">
+                <div className="bg-white/20 backdrop-blur-sm p-3 rounded-xl">
+                  <Icon className="text-white" size={28} strokeWidth={2.5} />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-white mb-1">
+                    {recommendation.title}
+                  </h3>
+                  <p className="text-sm text-white/90 font-medium">
+                    Personalized recommendations for your health
+                  </p>
+                </div>
+              </div>
+              {/* Version Badge - MAJOR VISUAL IMPACT */}
+              <div className="bg-white/30 backdrop-blur-md px-4 py-2 rounded-full border-2 border-white/50">
+                <div className="flex items-center gap-2">
+                  <BookOpen className="text-white" size={16} />
+                  <span className="text-white font-bold text-sm">v{version}</span>
+                </div>
+              </div>
             </div>
-            <div>
-              <h3 className="text-2xl font-bold text-white mb-1">
-                {recommendation.title}
-              </h3>
-              <p className="text-sm text-white/90 font-medium">
-                Personalized recommendations for your health
-              </p>
+            
+            {/* Action Buttons - NEW FEATURE */}
+            <div className="flex gap-2 mt-3">
+              <button
+                onClick={handleExport}
+                className="flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm px-4 py-2 rounded-lg transition-all duration-200 border border-white/30"
+              >
+                <Download className="text-white" size={16} />
+                <span className="text-white text-sm font-semibold">Export</span>
+              </button>
+              <button
+                onClick={handleShare}
+                className="flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm px-4 py-2 rounded-lg transition-all duration-200 border border-white/30"
+              >
+                <Share2 className="text-white" size={16} />
+                <span className="text-white text-sm font-semibold">Share</span>
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Tips List with enhanced styling */}
+        {/* ENHANCED Tips List with Interactive Checkboxes */}
         <div className="p-6 space-y-4">
+          {/* Progress Indicator - NEW FEATURE */}
+          <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 mb-4 border border-gray-200">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="text-blue-600" size={18} />
+                <span className="text-sm font-bold text-gray-700">Your Progress</span>
+              </div>
+              <span className="text-sm font-bold text-blue-600">
+                {checkedTips.size} / {recommendation.tips.length} completed
+              </span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2.5">
+              <div 
+                className={`${config.headerBg} h-2.5 rounded-full transition-all duration-500`}
+                style={{ width: `${(checkedTips.size / recommendation.tips.length) * 100}%` }}
+              ></div>
+            </div>
+          </div>
+
           {recommendation.tips.map((tip, index) => {
             const TipIcon = config.tipIcons[index % config.tipIcons.length];
+            const isChecked = checkedTips.has(index);
             return (
               <div 
                 key={index}
-                className="tip-card-entrance bg-white/80 backdrop-blur-sm rounded-xl p-4 border-2 border-white shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300"
+                className={`tip-card-entrance bg-white/80 backdrop-blur-sm rounded-xl p-4 border-2 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300 cursor-pointer ${
+                  isChecked ? 'border-green-400 bg-green-50/80' : 'border-white'
+                }`}
                 style={{ animationDelay: `${index * 100}ms` }}
+                onClick={() => toggleTipCheck(index)}
               >
                 <div className="flex items-start gap-4">
+                  {/* Interactive Checkbox - NEW FEATURE */}
+                  <div className="flex-shrink-0">
+                    <div 
+                      className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+                        isChecked 
+                          ? 'bg-green-500 border-green-500' 
+                          : 'bg-white border-gray-300 hover:border-gray-400'
+                      }`}
+                    >
+                      {isChecked && <CheckCircle2 className="text-white" size={16} />}
+                    </div>
+                  </div>
+                  
                   <div className="flex-shrink-0">
                     <div className={`${config.headerBg} p-2.5 rounded-lg shadow-md`}>
                       <TipIcon className="text-white" size={20} strokeWidth={2.5} />
@@ -176,8 +321,15 @@ export default function RecommendationPanel({ result }: RecommendationPanelProps
                       <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                         Step {index + 1}
                       </span>
+                      {isChecked && (
+                        <span className="text-xs font-bold text-green-600 uppercase tracking-wider">
+                          ✓ Completed
+                        </span>
+                      )}
                     </div>
-                    <p className="text-sm text-gray-800 leading-relaxed font-medium">
+                    <p className={`text-sm leading-relaxed font-medium ${
+                      isChecked ? 'text-gray-600 line-through' : 'text-gray-800'
+                    }`}>
                       {tip}
                     </p>
                   </div>

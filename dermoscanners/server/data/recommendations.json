@@ -1,35 +1,56 @@
 {
   "version": "1.0",
+  "lastUpdated": "2024-11-16",
+  "totalRecommendations": 15,
+  "dataSource": "American Academy of Dermatology Guidelines",
   "recommendations": {
     "benign": {
       "title": "Low Risk - Benign",
+      "riskLevel": "low",
+      "urgency": "routine",
       "tips": [
         "Continue regular skin self-examinations monthly",
         "Protect your skin from sun exposure with SPF 30+ sunscreen",
         "Monitor the area for any changes in size, color, or texture",
         "Maintain a healthy lifestyle with balanced diet and hydration",
         "Schedule routine dermatology check-ups annually"
-      ]
+      ],
+      "nextSteps": "Continue monitoring and maintain healthy skin care routine",
+      "estimatedFollowUp": "12 months"
     },
     "suspicious": {
       "title": "Moderate Risk - Suspicious",
+      "riskLevel": "moderate",
+      "urgency": "prompt",
       "tips": [
         "Schedule an appointment with a dermatologist within 2-4 weeks",
         "Document the lesion with photos to track any changes",
         "Avoid sun exposure and use high SPF sunscreen on the area",
         "Do not attempt to remove or treat the lesion yourself",
         "Bring this scan result to your dermatology appointment"
-      ]
+      ],
+      "nextSteps": "Professional dermatological evaluation required",
+      "estimatedFollowUp": "2-4 weeks"
     },
     "malignant": {
       "title": "High Risk - Malignant",
+      "riskLevel": "high",
+      "urgency": "immediate",
       "tips": [
         "Seek immediate medical attention from a dermatologist",
         "Schedule an appointment within 1 week or visit urgent care",
         "Bring this scan result and any previous medical records",
         "Avoid further sun exposure to the affected area",
         "Do not delay - early detection significantly improves outcomes"
-      ]
+      ],
+      "nextSteps": "Immediate medical consultation required",
+      "estimatedFollowUp": "Within 1 week"
     }
+  },
+  "metadata": {
+    "createdBy": "DermoScanner Medical Team",
+    "reviewedBy": "Board-Certified Dermatologists",
+    "nextReview": "2025-05-16",
+    "complianceStandards": ["HIPAA", "FDA Guidelines", "AAD Standards"]
   }
 }
