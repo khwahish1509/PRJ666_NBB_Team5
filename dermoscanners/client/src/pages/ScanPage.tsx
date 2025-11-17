@@ -3,10 +3,11 @@
  * Sprint 3: AI-powered scan workflow with image upload
  */
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload, Loader2, History, AlertCircle, CheckCircle, Sparkles } from 'lucide-react';
 import api from '../services/api';
+import { BrowserMultiFormatReader } from '@zxing/library';
 import ResultCard from '../components/scan/ResultCard';
 import RecommendationPanel from '../components/scan/RecommendationPanel';
 import { saveScan } from '../utils/scanStorage';
@@ -28,10 +29,28 @@ export default function ScanPage() {
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [barcode, setBarcode] = useState('');
+  const [scanning, setScanning] = useState(false);
+  const [cameraError, setCameraError] = useState('');
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const resultRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  useEffect(() => {
+    return () => {
+      // cleanup on unmount
+      try {
+        if (codeReaderRef.current) {
+          codeReaderRef.current.reset();
+          codeReaderRef.current = null;
+        }
+      } catch (err) {
+        // ignore
+      }
+    };
+  }, []);
 
   // Handle file selection
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -268,6 +287,84 @@ export default function ScanPage() {
                   placeholder="e.g., 3337875597388"
                   className="w-full px-4 py-4 text-lg border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
                 />
+                {/* Camera scan controls */}
+                <div className="mt-3 flex gap-3">
+                  {!scanning ? (
+                    <button
+                      onClick={async () => {
+                        setCameraError('');
+                        // start camera scanner
+                        try {
+                          setScanning(true);
+                          const codeReader = new BrowserMultiFormatReader();
+                          codeReaderRef.current = codeReader;
+                          // decodeFromVideoDevice automatically selects a camera if undefined
+                          await codeReader.decodeFromVideoDevice(undefined, videoRef.current as HTMLVideoElement, (result, err) => {
+                            if (result) {
+                              const text = result.getText();
+                              if (text) {
+                                setBarcode(text);
+                                // Stop scanning once we have a code
+                                try {
+                                  codeReader.reset();
+                                } catch (e) {}
+                                setScanning(false);
+                                // Navigate to product page
+                                navigate(`/product/barcode/${encodeURIComponent(text)}`);
+                              }
+                            }
+                            if (err && (err as any).name === 'NotAllowedError') {
+                              setCameraError('Camera access was denied. Please allow camera permissions.');
+                              setScanning(false);
+                              try { codeReader.reset(); } catch (e) {}
+                            }
+                          });
+                        } catch (err: any) {
+                          console.error('Camera start error:', err);
+                          setCameraError('Failed to start camera. Your browser may not support camera access or permission was denied.');
+                          setScanning(false);
+                        }
+                      }}
+                      className="px-4 py-3 bg-indigo-600 text-white rounded-xl shadow hover:opacity-90 transition font-semibold"
+                    >
+                      Use Camera to Scan
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        try {
+                          codeReaderRef.current?.reset();
+                        } catch (e) {}
+                        setScanning(false);
+                      }}
+                      className="px-4 py-3 bg-rose-500 text-white rounded-xl shadow hover:opacity-90 transition font-semibold"
+                    >
+                      Stop Camera
+                    </button>
+                  )}
+
+                  <button
+                    onClick={() => {
+                      if (barcode.trim()) {
+                        navigate(`/product/barcode/${barcode.trim()}`);
+                      } else {
+                        setError('Please enter a barcode number');
+                      }
+                    }}
+                    className="px-4 py-3 bg-white border border-gray-300 rounded-xl font-semibold"
+                  >
+                    Search Manually
+                  </button>
+                </div>
+                {/* Video preview when scanning */}
+                {scanning && (
+                  <div className="mt-4 rounded-xl overflow-hidden border border-gray-200">
+                    <video ref={videoRef} className="w-full h-64 object-cover bg-black" playsInline muted />
+                  </div>
+                )}
+                {cameraError && (
+                  <p className="mt-2 text-sm text-red-600">{cameraError}</p>
+                )}
               </div>
 
               <button
