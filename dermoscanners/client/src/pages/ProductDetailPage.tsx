@@ -6,7 +6,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Star, AlertTriangle, CheckCircle, XCircle, Loader2 } from 'lucide-react';
-import axios from 'axios';
+import { api } from '../services/api';
 
 interface Product {
   _id: string;
@@ -38,7 +38,7 @@ export default function ProductDetailPage() {
 
   const fetchProduct = async () => {
     try {
-      const response = await axios.get(`http://localhost:5001/api/products/${id}`);
+      const response = await api.get(`/products/${id}`);
       setProduct(response.data.data);
     } catch (err) {
       setError('Failed to load product');
