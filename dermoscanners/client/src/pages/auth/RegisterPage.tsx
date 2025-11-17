@@ -36,7 +36,7 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       await register({ name, email, password, skinType, skinGoals });
-      navigate('/', { replace: true });
+      navigate('/dashboard', { replace: true });
     } catch (err: any) {
       const apiMessage = err?.response?.data?.message;
       const apiErrors = err?.response?.data?.errors;

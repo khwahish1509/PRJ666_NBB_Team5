@@ -8,72 +8,59 @@ import ScanHistory from '../models/ScanHistory.js';
 
 /**
  * Calculate recommendation score for a product
- * Enhanced with better weighting and history analysis
  * @param {Object} product - Product object
  * @param {Object} userProfile - User profile { skinType, skinGoals }
  * @param {Array} history - User's scan history
  * @returns {number} Score (0-100)
  */
 function calculateScore(product, userProfile, history = []) {
+  const weights = {
+    rating: 35,
+    skinType: 25,
+    safety: 25,
+    sentiment: 10,
+    price: 5
+  };
+
   let score = 0;
-  let maxScore = 0;
+  const maxScore = Object.values(weights).reduce((a, b) => a + b, 0);
 
-  // Rating score (0-35 points) - weighted heavily
-  const ratingScore = (product.rating || 0) * 7;
-  score += ratingScore;
-  maxScore += 35;
+  // Rating score
+  score += (product.rating || 0) * (weights.rating / 5);
 
-  // Skin type match (0-25 points)
+  // Skin type match
   if (userProfile?.skinType && product.skinTypes?.includes(userProfile.skinType)) {
-    score += 25; // Perfect match
+    score += weights.skinType;
   } else if (product.skinTypes?.includes('all') || product.skinTypes?.includes('normal')) {
-    score += 15; // Universal products
-  } else if (product.skinTypes?.length > 0) {
-    score += 5; // Has skin type info but doesn't match
+    score += weights.skinType * 0.6;
   }
-  maxScore += 25;
 
-  // Safety rating (0-25 points) - critical factor
-  const safetyScores = { safe: 25, caution: 12, warning: 0 };
-  score += safetyScores[product.safetyRating] || 5;
-  maxScore += 25;
+  // Safety rating
+  const safetyScores = { safe: weights.safety, caution: weights.safety * 0.5, warning: 0 };
+  score += safetyScores[product.safetyRating] || weights.safety * 0.2;
 
-  // Sentiment score (0-10 points)
-  score += (product.sentimentScore || 0.5) * 10;
-  maxScore += 10;
+  // Sentiment score
+  score += (product.sentimentScore || 0.5) * weights.sentiment;
 
-  // Price reasonability (0-5 points) - bonus for good value
-  if (product.price && product.price < 30) {
-    score += 5; // Affordable
-  } else if (product.price && product.price < 50) {
-    score += 3; // Mid-range
-  } else {
-    score += 1; // Premium
-  }
-  maxScore += 5;
+  // Price value
+  if (product.price < 30) score += weights.price;
+  else if (product.price < 50) score += weights.price * 0.6;
+  else score += weights.price * 0.2;
 
-  // History-based adjustments
-  if (history && history.length > 0) {
-    // Check if recently scanned (penalize)
-    const recentlyScanned = history.slice(0, 10).some(h => 
-      h.productId && h.productId.toString() === product._id.toString()
+  // History adjustments
+  if (history.length > 0) {
+    const recentlyViewed = history.slice(0, 10).some(h => 
+      h.productId?.toString() === product._id.toString()
     );
-    if (recentlyScanned) {
-      score *= 0.4; // Reduce score by 60% for recently viewed items
-    }
+    if (recentlyViewed) score *= 0.4;
 
-    // Category preference (bonus for frequently scanned categories)
-    const categoryCount = history.filter(h => 
+    const categoryPreference = history.filter(h => 
       h.productSnapshot?.category === product.category
     ).length;
-    if (categoryCount > 2) {
-      score *= 1.15; // 15% bonus for preferred categories
-    }
+    if (categoryPreference > 2) score *= 1.15;
   }
 
-  // Normalize to 0-100 scale
-  const normalizedScore = (score / maxScore) * 100;
-  return Math.min(100, Math.max(0, normalizedScore));
+  return Math.min(100, Math.max(0, (score / maxScore) * 100));
 }
 
 /**

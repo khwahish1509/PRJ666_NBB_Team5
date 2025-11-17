@@ -1,8 +1,8 @@
 import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
-  timeout: 10000, // 10 second timeout
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5001/api',
+  timeout: 15000,
 });
 
 // Request interceptor to add auth token

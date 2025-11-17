@@ -12,6 +12,8 @@ import scanHistoryRoutes from './routes/scanHistoryRoutes.js';
 import ingredientSafetyRoutes from './routes/ingredientSafetyRoutes.js';
 import recommendationRoutes from './routes/recommendationRoutes.js';
 import sentimentRoutes from './routes/sentimentRoutes.js';
+import aiRoutes from './routes/aiRoutes.js';
+import scanRoutes from './routes/scanRoutes.js';
 import { notFoundHandler, errorHandler } from './middleware/errorHandler.js';
 
 dotenv.config();
@@ -20,7 +22,18 @@ const app = express();
 
 // Security & middlewares
 app.use(helmet());
-app.use(cors({ origin: process.env.CLIENT_URL || '*', credentials: true }));
+
+// CORS configuration - allows frontend to make requests to backend
+const corsOptions = {
+  origin: process.env.CLIENT_URL || '*',
+  credentials: true,
+  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'PUT'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 600 // Cache preflight requests for 10 minutes
+};
+app.use(cors(corsOptions));
+
 app.use(xss());
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -35,9 +48,11 @@ app.use('/api/auth', authLimiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/history', scanHistoryRoutes);
+app.use('/api/scans', scanRoutes);
 app.use('/api/ingredients', ingredientSafetyRoutes);
 app.use('/api/recommendations', recommendationRoutes);
 app.use('/api/sentiment', sentimentRoutes);
+app.use('/api/ai', aiRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });

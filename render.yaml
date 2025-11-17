@@ -1,0 +1,49 @@
+# Render Deployment Configuration for DermoScanner
+# This file defines the deployment configuration for both backend API and frontend client
+
+services:
+  # Backend API Service
+  - type: web
+    name: dermoscanner-api
+    runtime: node
+    region: oregon
+    plan: free
+    buildCommand: cd dermoscanners/server && npm install
+    startCommand: cd dermoscanners/server && npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: MONGO_URI
+        sync: false  # Set this in Render dashboard (sensitive)
+      - key: JWT_SECRET
+        sync: false  # Set this in Render dashboard (sensitive)
+      - key: JWT_EXPIRES_IN
+        value: 15m
+      - key: JWT_REFRESH_SECRET
+        sync: false  # Set this in Render dashboard (sensitive)
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: 7d
+      - key: CLIENT_URL
+        sync: false  # Set this to your deployed frontend URL in Render dashboard
+    
+  # Frontend Client Service (Static Site)
+  - type: web
+    name: dermoscanner-client
+    runtime: static
+    region: oregon
+    plan: free
+    buildCommand: cd dermoscanners/client && npm install && npm run build
+    staticPublishPath: ./dermoscanners/client/dist
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+    envVars:
+      - key: VITE_API_URL
+        sync: false  # Set this to your deployed backend URL in Render dashboard

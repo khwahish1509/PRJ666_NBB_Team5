@@ -6,7 +6,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Star, Filter, ArrowUpDown } from 'lucide-react';
-import axios from 'axios';
+import api from '../services/api';
+import LoadingSpinner from '../components/common/LoadingSpinner';
+import ErrorMessage from '../components/common/ErrorMessage';
 
 interface Product {
   _id: string;
@@ -17,68 +19,55 @@ interface Product {
   category: string;
   skinTypes: string[];
   safetyRating: string;
-  sentimentScore: number;
   imageUrl: string;
   score?: number;
 }
+
+const SAFETY_COLORS = {
+  safe: 'bg-green-100 text-green-800',
+  caution: 'bg-yellow-100 text-yellow-800',
+  warning: 'bg-red-100 text-red-800',
+};
+
+const sortProducts = (products: Product[], sortBy: string) => {
+  const sorted = [...products];
+  switch (sortBy) {
+    case 'rating':
+      return sorted.sort((a, b) => b.rating - a.rating);
+    case 'price-low':
+      return sorted.sort((a, b) => a.price - b.price);
+    case 'price-high':
+      return sorted.sort((a, b) => b.price - a.price);
+    case 'safety':
+      const order = { safe: 0, caution: 1, warning: 2 };
+      return sorted.sort((a, b) => (order[a.safetyRating] || 3) - (order[b.safetyRating] || 3));
+    default:
+      return sorted;
+  }
+};
 
 export default function RecommendationsPage() {
   const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
-  // Filters
-  const [skinType, setSkinType] = useState('');
-  const [maxPrice, setMaxPrice] = useState('');
-  const [category, setCategory] = useState('');
-  
-  // Sorting
+  const [filters, setFilters] = useState({ skinType: '', maxPrice: '', category: '' });
   const [sortBy, setSortBy] = useState('relevance');
 
   useEffect(() => {
     fetchRecommendations();
-  }, [skinType, maxPrice, category, sortBy]);
+  }, [filters, sortBy]);
 
   const fetchRecommendations = async () => {
     setLoading(true);
     setError('');
-
     try {
       const params = new URLSearchParams();
-      if (skinType) params.append('skinType', skinType);
-      if (maxPrice) params.append('maxPrice', maxPrice);
-      if (category) params.append('category', category);
-
-      const response = await axios.get(
-        `http://localhost:5001/api/recommendations?${params.toString()}`
-      );
-
-      let sortedProducts = response.data.data;
-
-      // Apply sorting
-      switch (sortBy) {
-        case 'rating':
-          sortedProducts.sort((a: Product, b: Product) => b.rating - a.rating);
-          break;
-        case 'price-low':
-          sortedProducts.sort((a: Product, b: Product) => a.price - b.price);
-          break;
-        case 'price-high':
-          sortedProducts.sort((a: Product, b: Product) => b.price - a.price);
-          break;
-        case 'safety':
-          sortedProducts.sort((a: Product, b: Product) => {
-            const safetyOrder: { [key: string]: number } = { safe: 0, caution: 1, warning: 2 };
-            return (safetyOrder[a.safetyRating] || 3) - (safetyOrder[b.safetyRating] || 3);
-          });
-          break;
-        default:
-          // Relevance (by score)
-          break;
-      }
-
-      setProducts(sortedProducts);
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value) params.append(key, value);
+      });
+      const { data } = await api.get(`/recommendations?${params}`);
+      setProducts(sortProducts(data.data, sortBy));
     } catch (err) {
       setError('Failed to load recommendations');
     } finally {
@@ -86,97 +75,87 @@ export default function RecommendationsPage() {
     }
   };
 
+  const updateFilter = (key: string, value: string) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+  };
+
   const clearFilters = () => {
-    setSkinType('');
-    setMaxPrice('');
-    setCategory('');
+    setFilters({ skinType: '', maxPrice: '', category: '' });
     setSortBy('relevance');
   };
 
-  const getSafetyColor = (rating: string) => {
-    switch (rating) {
-      case 'safe': return 'bg-green-100 text-green-800';
-      case 'caution': return 'bg-yellow-100 text-yellow-800';
-      case 'warning': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-indigo-50/30 to-purple-50/30 p-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Product Recommendations</h1>
-          <p className="text-gray-600">Personalized products for your skin type</p>
+        <div className="mb-8 text-center header-fade-in">
+          <div className="inline-block mb-4">
+            <div className="bg-gradient-to-r from-pink-500 to-rose-600 p-4 rounded-2xl shadow-lg">
+              <Star className="text-white" size={32} />
+            </div>
+          </div>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent mb-3">
+            Product Recommendations
+          </h1>
+          <p className="text-gray-600 text-lg">Personalized products curated for your skin type</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Filters Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-sm p-6 sticky top-4">
-              <div className="flex items-center gap-2 mb-4">
-                <Filter size={20} />
-                <h2 className="text-lg font-semibold">Filters</h2>
+            <div className="bg-white rounded-2xl shadow-xl p-6 sticky top-4 border border-gray-100">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="bg-gradient-to-br from-indigo-100 to-purple-100 p-2.5 rounded-xl">
+                  <Filter size={20} className="text-indigo-600" />
+                </div>
+                <h2 className="text-xl font-bold text-gray-800">Filters</h2>
               </div>
 
-              {/* Skin Type Filter */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Skin Type
-                </label>
-                <select
-                  value={skinType}
-                  onChange={(e) => setSkinType(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-                >
-                  <option value="">All Types</option>
-                  <option value="dry">Dry</option>
-                  <option value="oily">Oily</option>
-                  <option value="combination">Combination</option>
-                  <option value="sensitive">Sensitive</option>
-                  <option value="normal">Normal</option>
-                </select>
-              </div>
+              <div className="space-y-5">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Skin Type</label>
+                  <select
+                    value={filters.skinType}
+                    onChange={(e) => updateFilter('skinType', e.target.value)}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all"
+                  >
+                    <option value="">All Types</option>
+                    {['dry', 'oily', 'combination', 'sensitive', 'normal'].map(type => (
+                      <option key={type} value={type}>{type.charAt(0).toUpperCase() + type.slice(1)}</option>
+                    ))}
+                  </select>
+                </div>
 
-              {/* Price Filter */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Max Price ($)
-                </label>
-                <input
-                  type="number"
-                  value={maxPrice}
-                  onChange={(e) => setMaxPrice(e.target.value)}
-                  placeholder="e.g., 50"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-                />
-              </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Max Price ($)</label>
+                  <input
+                    type="number"
+                    value={filters.maxPrice}
+                    onChange={(e) => updateFilter('maxPrice', e.target.value)}
+                    placeholder="e.g., 50"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all"
+                  />
+                </div>
 
-              {/* Category Filter */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Category
-                </label>
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-                >
-                  <option value="">All Categories</option>
-                  <option value="cleanser">Cleanser</option>
-                  <option value="moisturizer">Moisturizer</option>
-                  <option value="serum">Serum</option>
-                  <option value="sunscreen">Sunscreen</option>
-                  <option value="toner">Toner</option>
-                  <option value="mask">Mask</option>
-                </select>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Category</label>
+                  <select
+                    value={filters.category}
+                    onChange={(e) => updateFilter('category', e.target.value)}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all"
+                  >
+                    <option value="">All Categories</option>
+                    {['cleanser', 'moisturizer', 'serum', 'sunscreen', 'toner', 'mask'].map(cat => (
+                      <option key={cat} value={cat}>{cat.charAt(0).toUpperCase() + cat.slice(1)}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               {/* Clear Filters */}
               <button
                 onClick={clearFilters}
-                className="w-full px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                className="w-full px-4 py-3 text-sm font-semibold text-gray-700 hover:text-gray-900 border-2 border-gray-300 rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all"
               >
                 Clear Filters
               </button>
@@ -186,18 +165,20 @@ export default function RecommendationsPage() {
           {/* Products Grid */}
           <div className="lg:col-span-3">
             {/* Sort & Results */}
-            <div className="bg-white rounded-xl shadow-sm p-4 mb-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <ArrowUpDown size={20} className="text-gray-600" />
-                  <span className="text-sm text-gray-600">
+            <div className="bg-white rounded-2xl shadow-xl p-5 mb-6 border border-gray-100">
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="bg-gradient-to-br from-indigo-100 to-purple-100 p-2 rounded-lg">
+                    <ArrowUpDown size={20} className="text-indigo-600" />
+                  </div>
+                  <span className="text-sm font-semibold text-gray-700">
                     {products.length} products found
                   </span>
                 </div>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                  className="px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-medium transition-all"
                 >
                   <option value="relevance">Sort by Relevance</option>
                   <option value="rating">Highest Rated</option>
@@ -208,28 +189,22 @@ export default function RecommendationsPage() {
               </div>
             </div>
 
-            {/* Loading */}
-            {loading && (
-              <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-                <p className="mt-4 text-gray-600">Loading recommendations...</p>
-              </div>
-            )}
-
-            {/* Error */}
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-                {error}
-              </div>
-            )}
+            {loading && <LoadingSpinner size={64} message="Loading recommendations..." />}
+            {error && <ErrorMessage message={error} onRetry={fetchRecommendations} />}
 
             {/* No Results */}
             {!loading && !error && products.length === 0 && (
-              <div className="bg-white rounded-xl shadow-sm p-12 text-center">
-                <p className="text-gray-600 mb-4">No products found matching your criteria</p>
+              <div className="bg-white rounded-2xl shadow-xl p-16 text-center border border-gray-100">
+                <div className="bg-gradient-to-br from-gray-100 to-gray-200 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                  <Star size={40} className="text-gray-400" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-800 mb-3">No Products Found</h3>
+                <p className="text-gray-600 mb-8 max-w-md mx-auto">
+                  No products match your current criteria. Try adjusting your filters.
+                </p>
                 <button
                   onClick={clearFilters}
-                  className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                  className="px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl"
                 >
                   Clear Filters
                 </button>
@@ -238,15 +213,16 @@ export default function RecommendationsPage() {
 
             {/* Products Grid */}
             {!loading && products.length > 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {products.map((product) => (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {products.map((product, index) => (
                   <div
                     key={product._id}
                     onClick={() => navigate(`/product/${product._id}`)}
-                    className="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition cursor-pointer"
+                    className="product-card-entrance bg-white rounded-2xl shadow-lg p-5 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 cursor-pointer border-2 border-transparent hover:border-pink-200 group"
+                    style={{ animationDelay: `${index * 50}ms` }}
                   >
                     {/* Image */}
-                    <div className="w-full h-40 bg-gray-200 rounded-lg mb-3 flex items-center justify-center overflow-hidden">
+                    <div className="w-full h-48 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl mb-4 flex items-center justify-center overflow-hidden group-hover:shadow-inner transition-all">
                       {product.imageUrl ? (
                         <img 
                           src={product.imageUrl} 
@@ -280,23 +256,23 @@ export default function RecommendationsPage() {
 
                     {/* Info */}
                     <div>
-                      <h3 className="font-semibold text-gray-800 mb-1">{product.name}</h3>
-                      <p className="text-sm text-gray-600 mb-2">{product.brand}</p>
+                      <h3 className="font-bold text-gray-900 mb-1.5 text-lg group-hover:text-pink-600 transition-colors">{product.name}</h3>
+                      <p className="text-sm text-gray-600 mb-3 font-medium">{product.brand}</p>
 
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-lg font-bold text-indigo-600">${product.price}</span>
-                        <div className="flex items-center gap-1">
-                          <Star className="fill-yellow-400 text-yellow-400" size={16} />
-                          <span className="text-sm font-medium">{product.rating}</span>
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-2xl font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent">${product.price}</span>
+                        <div className="flex items-center gap-1.5 bg-yellow-50 px-2.5 py-1.5 rounded-lg">
+                          <Star className="fill-yellow-400 text-yellow-400" size={18} />
+                          <span className="text-sm font-bold text-gray-800">{product.rating}</span>
                         </div>
                       </div>
 
                       <div className="flex items-center justify-between">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getSafetyColor(product.safetyRating)}`}>
+                        <span className={`px-3 py-1.5 rounded-full text-xs font-bold uppercase ${SAFETY_COLORS[product.safetyRating] || 'bg-gray-100 text-gray-800'}`}>
                           {product.safetyRating}
                         </span>
                         {product.score && (
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-gray-500 font-medium bg-gray-100 px-2 py-1 rounded-full">
                             Score: {product.score.toFixed(1)}
                           </span>
                         )}
@@ -309,6 +285,38 @@ export default function RecommendationsPage() {
           </div>
         </div>
       </div>
+
+      <style>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes cardSlideIn {
+          from {
+            opacity: 0;
+            transform: translateY(20px) scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+
+        .header-fade-in {
+          animation: fadeIn 600ms ease-out;
+        }
+
+        .product-card-entrance {
+          animation: cardSlideIn 400ms ease-out backwards;
+        }
+      `}</style>
     </div>
   );
 }
