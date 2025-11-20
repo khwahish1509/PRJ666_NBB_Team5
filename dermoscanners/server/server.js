@@ -14,6 +14,7 @@ import recommendationRoutes from './routes/recommendationRoutes.js';
 import sentimentRoutes from './routes/sentimentRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
 import scanRoutes from './routes/scanRoutes.js';
+import chatRoutes from './routes/chatRoutes.js';
 import { notFoundHandler, errorHandler } from './middleware/errorHandler.js';
 
 dotenv.config();
@@ -70,6 +71,7 @@ app.use('/api/ingredients', ingredientSafetyRoutes);
 app.use('/api/recommendations', recommendationRoutes);
 app.use('/api/sentiment', sentimentRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/chat', chatRoutes);
 
 // Root route
 app.get('/', (req, res) => {

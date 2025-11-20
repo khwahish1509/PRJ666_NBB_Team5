@@ -1,6 +1,7 @@
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Home, Scan, History, Sparkles, GitCompare, User, LogOut, BookOpen } from 'lucide-react';
+import ChatWidget from '../chat/ChatWidget';
 
 export default function Layout() {
   const { user, logout } = useAuth();
@@ -147,6 +148,9 @@ export default function Layout() {
       <main className="flex-1 max-w-7xl mx-auto w-full px-6 py-8">
         <Outlet />
       </main>
+
+      {/* Chat Widget */}
+      {user && <ChatWidget />}
 
       {/* Modern Footer */}
       <footer className="bg-white/60 backdrop-blur-md border-t border-gray-200 py-6">
