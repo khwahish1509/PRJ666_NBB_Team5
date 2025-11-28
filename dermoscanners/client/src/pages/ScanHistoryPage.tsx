@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { Download, Upload, Trash2, Clock, AlertCircle, CheckCircle, AlertTriangle, XCircle } from 'lucide-react';
 import { Scan, getScans, deleteScan } from '../utils/scanStorage';
 import { downloadBackup, restoreBackup } from '../utils/backupManager';
+import ClinicianCard from '../components/clinician/ClinicianCard';
 
 export default function ScanHistoryPage() {
   const navigate = useNavigate();
@@ -341,6 +342,17 @@ export default function ScanHistoryPage() {
           </div>
         )}
       </div>
+
+      {/* Clinician Finder Card */}
+      {scans.length > 0 && scans.some(scan => scan.result === 'suspicious' || scan.result === 'malignant') && (
+        <div className="mt-8">
+          <ClinicianCard
+            title="Concerning Results Detected"
+            description="Some of your scans show results that require professional evaluation. Find a dermatologist near you for expert consultation."
+            variant="warning"
+          />
+        </div>
+      )}
 
       <style>{`
         @keyframes slideIn {

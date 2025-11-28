@@ -12,9 +12,12 @@ import ScanPage from './pages/ScanPage';
 import ScanHistoryPage from './pages/ScanHistoryPage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import ComparisonPage from './pages/ComparisonPage';
+import ComparisonSelectorPage from './pages/ComparisonSelectorPage';
 import RecommendationsPage from './pages/RecommendationsPage';
 import FeaturesShowcasePage from './pages/FeaturesShowcasePage';
 import DemoPage from './pages/DemoPage';
+import ClinicianFinderPage from './pages/ClinicianFinderPage';
+import ProgressPage from './pages/ProgressPage';
 import NotFoundPage from './pages/NotFoundPage';
 import Layout from './components/layout/Layout';
 import ProtectedRoute from './components/auth/ProtectedRoute';
@@ -86,6 +89,14 @@ export default function App() {
               }
             />
             <Route
+              path="/compare-scans"
+              element={
+                <ProtectedRoute>
+                  <ComparisonSelectorPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/recommendations"
               element={
                 <ProtectedRoute>
@@ -114,6 +125,22 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <DemoPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/clinicians"
+              element={
+                <ProtectedRoute>
+                  <ClinicianFinderPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/progress"
+              element={
+                <ProtectedRoute>
+                  <ProgressPage />
                 </ProtectedRoute>
               }
             />

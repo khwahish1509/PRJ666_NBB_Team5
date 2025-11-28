@@ -10,6 +10,7 @@ import api from '../services/api';
 import { BrowserMultiFormatReader } from '@zxing/library';
 import ResultCard from '../components/scan/ResultCard';
 import RecommendationPanel from '../components/scan/RecommendationPanel';
+import ClinicianCard from '../components/clinician/ClinicianCard';
 import { saveScan } from '../utils/scanStorage';
 import { useAuth } from '../context/AuthContext';
 
@@ -28,6 +29,7 @@ export default function ScanPage() {
   const [error, setError] = useState('');
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [xpEarned, setXpEarned] = useState(0);
   const [barcode, setBarcode] = useState('');
   const [scanning, setScanning] = useState(false);
   const [cameraError, setCameraError] = useState('');
@@ -117,6 +119,10 @@ export default function ScanPage() {
 
       // Implement dual storage save (subtask 6.3)
       await handleSaveScan(response.data);
+      
+      // Show XP earned
+      setXpEarned(10);
+      setTimeout(() => setXpEarned(0), 3000);
 
     } catch (err: any) {
       console.error('Upload error:', err);
@@ -299,7 +305,7 @@ export default function ScanPage() {
                           const codeReader = new BrowserMultiFormatReader();
                           codeReaderRef.current = codeReader;
                           // decodeFromVideoDevice automatically selects a camera if undefined
-                          await codeReader.decodeFromVideoDevice(undefined, videoRef.current as HTMLVideoElement, (result, err) => {
+                          await codeReader.decodeFromVideoDevice(null, videoRef.current as HTMLVideoElement, (result, err) => {
                             if (result) {
                               const text = result.getText();
                               if (text) {
@@ -506,6 +512,19 @@ export default function ScanPage() {
           )}
         </div>
 
+        {/* XP Earned Notification */}
+        {xpEarned > 0 && (
+          <div className="fixed top-20 right-4 z-50 animate-slide-in">
+            <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3">
+              <div className="text-3xl">⭐</div>
+              <div>
+                <p className="font-bold text-lg">+{xpEarned} XP Earned!</p>
+                <p className="text-sm text-white/90">Keep scanning to level up</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Results Section */}
         {scanResult && (
           <div ref={resultRef} className="space-y-6">
@@ -519,6 +538,19 @@ export default function ScanPage() {
 
             {/* Recommendation Panel */}
             <RecommendationPanel result={scanResult.result} />
+
+            {/* Clinician Finder Card - Show for suspicious or malignant results */}
+            {(scanResult.result === 'suspicious' || scanResult.result === 'malignant') && (
+              <ClinicianCard
+                title={scanResult.result === 'malignant' ? 'Urgent: Seek Medical Attention' : 'Consult a Dermatologist'}
+                description={
+                  scanResult.result === 'malignant'
+                    ? 'This scan shows concerning results. Please consult a dermatologist immediately for professional evaluation.'
+                    : 'We recommend consulting with a dermatologist for a professional evaluation of this scan.'
+                }
+                variant={scanResult.result === 'malignant' ? 'warning' : 'info'}
+              />
+            )}
 
             {/* View History Button */}
             <div className="flex justify-center">

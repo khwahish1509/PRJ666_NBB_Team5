@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { getScans } from '../utils/scanStorage';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Camera, GitCompare, TrendingUp, Sparkles, Trash2, Clock } from 'lucide-react';
+import { Camera, GitCompare, TrendingUp, Sparkles, Trash2, Clock, Stethoscope, Award, Flame } from 'lucide-react';
 import api from '../services/api';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 
@@ -27,9 +27,11 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   // Local skin scans stored in localStorage (AI scan results)
   const [localSkinScans, setLocalSkinScans] = useState<any[]>([]);
+  const [progressData, setProgressData] = useState<any>(null);
 
   useEffect(() => {
     fetchHistory();
+    fetchProgress();
     // Load local skin scans for dashboard preview
     try {
       const local = getScans();
@@ -38,6 +40,15 @@ export default function DashboardPage() {
       console.error('Error loading local skin scans for dashboard:', err);
     }
   }, []);
+
+  const fetchProgress = async () => {
+    try {
+      const { data } = await api.get('/progress/analytics');
+      setProgressData(data.data);
+    } catch (error) {
+      console.error('Error fetching progress:', error);
+    }
+  };
 
   const fetchHistory = async () => {
     try {
@@ -102,7 +113,7 @@ export default function DashboardPage() {
           <TrendingUp className="text-indigo-600" size={28} />
           Quick Actions
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <button
             onClick={() => navigate('/scan')}
             className="group bg-white p-8 rounded-2xl hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-indigo-300 hover:scale-105"
@@ -112,6 +123,17 @@ export default function DashboardPage() {
             </div>
             <h3 className="text-xl font-bold text-gray-800 mb-2">Scan Product</h3>
             <p className="text-gray-600">Scan barcode or enter manually</p>
+          </button>
+
+          <button
+            onClick={() => navigate('/clinicians')}
+            className="group bg-white p-8 rounded-2xl hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-blue-300 hover:scale-105"
+          >
+            <div className="bg-gradient-to-br from-blue-100 to-cyan-100 w-16 h-16 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <Stethoscope className="text-blue-600" size={32} />
+            </div>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">Find Clinicians</h3>
+            <p className="text-gray-600">Locate dermatologists nearby</p>
           </button>
 
           <button
@@ -141,7 +163,7 @@ export default function DashboardPage() {
       {/* Stats */}
       <div>
         <h2 className="text-2xl font-bold text-gray-800 mb-4">Your Stats</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="bg-gradient-to-br from-indigo-50 to-purple-50 p-6 rounded-2xl border-2 border-indigo-100 hover:shadow-xl transition-shadow">
             <div className="flex items-center justify-between mb-3">
               <p className="text-gray-700 font-semibold">Profile Completion</p>
@@ -159,27 +181,82 @@ export default function DashboardPage() {
           
           <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-2xl border-2 border-green-100 hover:shadow-xl transition-shadow">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-gray-700 font-semibold">Products Scanned</p>
+              <p className="text-gray-700 font-semibold">Total Scans</p>
               <div className="bg-green-100 p-2 rounded-lg">
                 <Camera className="w-5 h-5 text-green-600" />
               </div>
             </div>
-            <p className="text-4xl font-bold text-green-600 mb-2">{scanHistory.length}</p>
-            <p className="text-sm text-gray-600">Total scans this month</p>
+            <p className="text-4xl font-bold text-green-600 mb-2">{progressData?.totalScans || scanHistory.length}</p>
+            <p className="text-sm text-gray-600">Skin health tracking</p>
           </div>
           
-          <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-6 rounded-2xl border-2 border-purple-100 hover:shadow-xl transition-shadow">
+          <div className="bg-gradient-to-br from-yellow-50 to-orange-50 p-6 rounded-2xl border-2 border-yellow-100 hover:shadow-xl transition-shadow cursor-pointer" onClick={() => navigate('/progress')}>
             <div className="flex items-center justify-between mb-3">
-              <p className="text-gray-700 font-semibold">Recommendations</p>
-              <div className="bg-purple-100 p-2 rounded-lg">
-                <Sparkles className="w-5 h-5 text-purple-600" />
+              <p className="text-gray-700 font-semibold">Level & XP</p>
+              <div className="bg-yellow-100 p-2 rounded-lg">
+                <Award className="w-5 h-5 text-yellow-600" />
               </div>
             </div>
-            <p className="text-4xl font-bold text-purple-600 mb-2">10+</p>
-            <p className="text-sm text-gray-600">Products available</p>
+            <p className="text-4xl font-bold text-yellow-600 mb-2">Lvl {progressData?.level || 1}</p>
+            <p className="text-sm text-gray-600">{progressData?.xp || 0} XP earned</p>
+          </div>
+
+          <div className="bg-gradient-to-br from-orange-50 to-red-50 p-6 rounded-2xl border-2 border-orange-100 hover:shadow-xl transition-shadow cursor-pointer" onClick={() => navigate('/progress')}>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-gray-700 font-semibold">Current Streak</p>
+              <div className="bg-orange-100 p-2 rounded-lg">
+                <Flame className="w-5 h-5 text-orange-600" />
+              </div>
+            </div>
+            <p className="text-4xl font-bold text-orange-600 mb-2">{progressData?.stats?.consistencyStreak || 0}</p>
+            <p className="text-sm text-gray-600">Consecutive scans</p>
           </div>
         </div>
       </div>
+
+      {/* Progress Highlight */}
+      {progressData && progressData.totalScans > 0 && (
+        <div className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl p-8 text-white shadow-2xl">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold mb-2">Your Progress Journey</h2>
+              <p className="text-white/90">Keep tracking to unlock more achievements!</p>
+            </div>
+            <button
+              onClick={() => navigate('/progress')}
+              className="bg-white text-purple-600 px-6 py-3 rounded-xl font-semibold hover:bg-purple-50 transition-all"
+            >
+              View Details
+            </button>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+              <p className="text-white/80 text-sm mb-1">Improvement Score</p>
+              <p className="text-4xl font-bold">{progressData.improvementScore}</p>
+              <p className="text-sm text-white/80 mt-1">
+                {progressData.improvementScore >= 50 ? '📈 Improving!' : '📊 Keep tracking'}
+              </p>
+            </div>
+            
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+              <p className="text-white/80 text-sm mb-1">Achievements</p>
+              <p className="text-4xl font-bold">{progressData.achievements.length}</p>
+              <p className="text-sm text-white/80 mt-1">
+                {progressData.achievements.map((a: any) => a.badge).join(' ')}
+              </p>
+            </div>
+            
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+              <p className="text-white/80 text-sm mb-1">Next Milestone</p>
+              <p className="text-2xl font-bold">{progressData.nextMilestone.badge} {progressData.nextMilestone.title}</p>
+              <p className="text-sm text-white/80 mt-1">
+                {progressData.nextMilestone.scans - progressData.totalScans} scans away
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Scan History Section */}
       <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">

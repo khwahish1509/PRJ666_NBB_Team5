@@ -1,6 +1,6 @@
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Home, Scan, History, Sparkles, GitCompare, User, LogOut, BookOpen } from 'lucide-react';
+import { Home, Scan, History, Sparkles, GitCompare, User, LogOut, BookOpen, Stethoscope, TrendingUp } from 'lucide-react';
 import ChatWidget from '../chat/ChatWidget';
 
 export default function Layout() {
@@ -97,6 +97,34 @@ export default function Layout() {
               >
                 <BookOpen size={18} />
                 <span>Health Tips</span>
+              </NavLink>
+              
+              <NavLink 
+                to="/progress" 
+                className={({ isActive }) => `
+                  flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all duration-300
+                  ${isActive 
+                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg scale-105' 
+                    : 'text-gray-700 hover:bg-white hover:shadow-md'
+                  }
+                `}
+              >
+                <TrendingUp size={18} />
+                <span>Progress</span>
+              </NavLink>
+              
+              <NavLink 
+                to="/clinicians" 
+                className={({ isActive }) => `
+                  flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all duration-300
+                  ${isActive 
+                    ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg scale-105' 
+                    : 'text-gray-700 hover:bg-white hover:shadow-md'
+                  }
+                `}
+              >
+                <Stethoscope size={18} />
+                <span>Clinicians</span>
               </NavLink>
               
               <NavLink 

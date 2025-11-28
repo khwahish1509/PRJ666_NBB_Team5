@@ -15,6 +15,8 @@ import sentimentRoutes from './routes/sentimentRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
 import scanRoutes from './routes/scanRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
+import clinicianRoutes from './routes/clinicianRoutes.js';
+import progressRoutes from './routes/progressRoutes.js';
 import { notFoundHandler, errorHandler } from './middleware/errorHandler.js';
 
 dotenv.config();
@@ -72,6 +74,8 @@ app.use('/api/recommendations', recommendationRoutes);
 app.use('/api/sentiment', sentimentRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/clinicians', clinicianRoutes);
+app.use('/api/progress', progressRoutes);
 
 // Root route
 app.get('/', (req, res) => {
