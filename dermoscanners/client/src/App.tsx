@@ -16,6 +16,7 @@ import ComparisonSelectorPage from './pages/ComparisonSelectorPage';
 import RecommendationsPage from './pages/RecommendationsPage';
 import FeaturesShowcasePage from './pages/FeaturesShowcasePage';
 import DemoPage from './pages/DemoPage';
+import ChatDemoPage from './pages/ChatDemoPage';
 import ClinicianFinderPage from './pages/ClinicianFinderPage';
 import ProgressPage from './pages/ProgressPage';
 import NotFoundPage from './pages/NotFoundPage';
@@ -125,6 +126,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <DemoPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/chat-demo"
+              element={
+                <ProtectedRoute>
+                  <ChatDemoPage />
                 </ProtectedRoute>
               }
             />

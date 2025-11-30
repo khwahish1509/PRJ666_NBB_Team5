@@ -70,11 +70,15 @@ export const sendMessage = async (req, res) => {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error('Gemini API error:', errorData);
+      const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response' }));
+      console.error('Gemini API error:', {
+        status: response.status,
+        statusText: response.statusText,
+        errorData
+      });
       return res.status(500).json({ 
         error: 'Failed to get response from chatbot service',
-        details: errorData.error?.message || 'Unknown error'
+        details: errorData.error?.message || `API returned ${response.status}: ${response.statusText}`
       });
     }
 
@@ -102,16 +106,44 @@ export const sendMessage = async (req, res) => {
   }
 };
 
-// Get suggested questions
+// Get suggested questions with variety
 export const getSuggestedQuestions = (req, res) => {
-  const suggestions = [
+  const allSuggestions = [
+    // Product safety
+    "Is this product safe for sensitive skin?",
+    "What ingredients should I avoid?",
+    "Can I use this during pregnancy?",
+    
+    // Ingredient questions
+    "Explain harmful ingredients in skincare",
+    "What are the benefits of hyaluronic acid?",
+    "Is retinol safe for daily use?",
+    
+    // Comparison
+    "Compare moisturizer vs serum",
+    "What's better: chemical or physical sunscreen?",
+    "Compare different acne treatments",
+    
+    // Routines
     "What's the best skincare routine for dry skin?",
+    "How to build a morning skincare routine?",
+    "What's the correct order to apply products?",
+    
+    // Specific concerns
+    "How can I reduce dark circles?",
+    "What causes acne and how to prevent it?",
+    "How to fade hyperpigmentation?",
+    "Best products for anti-aging",
+    
+    // General advice
     "How often should I use sunscreen?",
-    "What causes acne and how can I prevent it?",
-    "What's the difference between moisturizer and serum?",
-    "How can I reduce dark circles under my eyes?",
-    "What ingredients should I look for in anti-aging products?"
+    "When should I see a dermatologist?",
+    "How to identify my skin type?"
   ];
+
+  // Randomly select 6 suggestions for variety
+  const shuffled = allSuggestions.sort(() => 0.5 - Math.random());
+  const suggestions = shuffled.slice(0, 6);
 
   res.json({ suggestions });
 };
