@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Text-to-Speech Test - DermoScanners</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      max-width: 700px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 28px;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+
+    .status {
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+
+    .status.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .status.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .status.info {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+
+    .text-box {
+      width: 100%;
+      min-height: 120px;
+      padding: 15px;
+      border: 2px solid #dee2e6;
+      border-radius: 10px;
+      font-size: 16px;
+      line-height: 1.6;
+      margin-bottom: 20px;
+      resize: vertical;
+      font-family: inherit;
+    }
+
+    .text-box:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .voice-select {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #dee2e6;
+      border-radius: 10px;
+      font-size: 14px;
+      margin-bottom: 20px;
+      background: white;
+      cursor: pointer;
+    }
+
+    .voice-select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      flex: 1;
+      min-width: 120px;
+      padding: 15px 20px;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-speak {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .btn-speak:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-pause {
+      background: #ffc107;
+      color: #333;
+    }
+
+    .btn-pause:hover:not(:disabled) {
+      background: #ffb300;
+    }
+
+    .btn-stop {
+      background: #dc3545;
+      color: white;
+    }
+
+    .btn-stop:hover:not(:disabled) {
+      background: #c82333;
+    }
+
+    .speaking-indicator {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 15px;
+      background: #e7f3ff;
+      border: 1px solid #b3d9ff;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      font-size: 14px;
+      color: #004085;
+      font-weight: 600;
+    }
+
+    .wave {
+      display: flex;
+      gap: 3px;
+    }
+
+    .bar {
+      width: 4px;
+      height: 20px;
+      background: #667eea;
+      border-radius: 2px;
+      animation: wave 1s ease-in-out infinite;
+    }
+
+    .bar:nth-child(1) { animation-delay: 0s; }
+    .bar:nth-child(2) { animation-delay: 0.1s; }
+    .bar:nth-child(3) { animation-delay: 0.2s; }
+    .bar:nth-child(4) { animation-delay: 0.3s; }
+
+    @keyframes wave {
+      0%, 100% { height: 10px; }
+      50% { height: 25px; }
+    }
+
+    .info-box {
+      background: #e7f3ff;
+      border: 1px solid #b3d9ff;
+      border-radius: 10px;
+      padding: 15px;
+      margin-top: 20px;
+      font-size: 13px;
+      color: #004085;
+    }
+
+    .info-box strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .info-box ul {
+      margin-left: 20px;
+      margin-top: 8px;
+    }
+
+    .info-box li {
+      margin-bottom: 4px;
+    }
+
+    .sample-texts {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .sample-btn {
+      padding: 10px 15px;
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      text-align: left;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .sample-btn:hover {
+      background: #e9ecef;
+      border-color: #667eea;
+    }
+
+    .icon {
+      font-size: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔊 Text-to-Speech Test</h1>
+    <p class="subtitle">Test the text-to-speech feature for DermoScanners chatbot</p>
+
+    <!-- Browser Support Status -->
+    <div id="supportStatus" class="status"></div>
+
+    <!-- Speaking Indicator -->
+    <div id="speakingIndicator" class="speaking-indicator" style="display: none;">
+      <div class="wave">
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+      </div>
+      <span id="speakingText">Speaking...</span>
+    </div>
+
+    <!-- Voice Selection -->
+    <select id="voiceSelect" class="voice-select">
+      <option value="">Loading voices...</option>
+    </select>
+
+    <!-- Sample Texts -->
+    <div class="sample-texts">
+      <strong style="font-size: 14px; color: #666; margin-bottom: 5px; display: block;">📝 Sample Texts:</strong>
+      <button class="sample-btn" onclick="loadSample(0)">
+        💧 Retinol is a form of vitamin A that helps with anti-aging...
+      </button>
+      <button class="sample-btn" onclick="loadSample(1)">
+        ☀️ Sunscreen is essential for protecting your skin from UV damage...
+      </button>
+      <button class="sample-btn" onclick="loadSample(2)">
+        🧴 Hyaluronic acid is a powerful hydrating ingredient...
+      </button>
+    </div>
+
+    <!-- Text Input -->
+    <textarea 
+      id="textInput" 
+      class="text-box" 
+      placeholder="Enter text to speak... Try typing a skincare question or response!"
+    >Retinol is a form of vitamin A that helps with anti-aging, reduces fine lines, improves skin texture, and promotes cell turnover. It's best used at night and requires sunscreen during the day.</textarea>
+
+    <!-- Controls -->
+    <div class="controls">
+      <button id="speakBtn" class="btn-speak">
+        <span class="icon">🔊</span>
+        <span>Speak</span>
+      </button>
+      <button id="pauseBtn" class="btn-pause" style="display: none;">
+        <span class="icon">⏸️</span>
+        <span>Pause</span>
+      </button>
+      <button id="resumeBtn" class="btn-pause" style="display: none;">
+        <span class="icon">▶️</span>
+        <span>Resume</span>
+      </button>
+      <button id="stopBtn" class="btn-stop" style="display: none;">
+        <span class="icon">⏹️</span>
+        <span>Stop</span>
+      </button>
+    </div>
+
+    <!-- Info Box -->
+    <div class="info-box">
+      <strong>💡 Features:</strong>
+      <ul>
+        <li>Natural sounding voices</li>
+        <li>Pause and resume playback</li>
+        <li>Multiple voice options</li>
+        <li>Works offline (no internet needed)</li>
+        <li>Free - no API costs</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    const samples = [
+      "Retinol is a form of vitamin A that helps with anti-aging, reduces fine lines, improves skin texture, and promotes cell turnover. It's best used at night and requires sunscreen during the day.",
+      "Sunscreen is essential for protecting your skin from harmful UV rays. Use SPF 30 or higher daily, even on cloudy days. Apply generously and reapply every two hours when outdoors.",
+      "Hyaluronic acid is a powerful hydrating ingredient that can hold up to 1000 times its weight in water. It helps plump the skin, reduce the appearance of fine lines, and maintain moisture levels."
+    ];
+
+    function loadSample(index) {
+      document.getElementById('textInput').value = samples[index];
+    }
+
+    // Check browser support
+    const supportStatus = document.getElementById('supportStatus');
+    const speakBtn = document.getElementById('speakBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const resumeBtn = document.getElementById('resumeBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const textInput = document.getElementById('textInput');
+    const voiceSelect = document.getElementById('voiceSelect');
+    const speakingIndicator = document.getElementById('speakingIndicator');
+    const speakingText = document.getElementById('speakingText');
+
+    let selectedVoice = null;
+    let utterance = null;
+
+    if ('speechSynthesis' in window) {
+      supportStatus.className = 'status success';
+      supportStatus.innerHTML = '✅ <strong>Text-to-speech is supported!</strong> Your browser can speak responses.';
+
+      // Load voices
+      function loadVoices() {
+        const voices = speechSynthesis.getVoices();
+        voiceSelect.innerHTML = '';
+
+        if (voices.length === 0) {
+          voiceSelect.innerHTML = '<option>Loading voices...</option>';
+          return;
+        }
+
+        // Filter English voices
+        const englishVoices = voices.filter(v => v.lang.startsWith('en'));
+        const otherVoices = voices.filter(v => !v.lang.startsWith('en'));
+
+        // Add English voices first
+        if (englishVoices.length > 0) {
+          const englishGroup = document.createElement('optgroup');
+          englishGroup.label = 'English Voices';
+          englishVoices.forEach((voice, index) => {
+            const option = document.createElement('option');
+            option.value = index;
+            option.textContent = `${voice.name} (${voice.lang})`;
+            if (voice.default) option.textContent += ' - Default';
+            englishGroup.appendChild(option);
+          });
+          voiceSelect.appendChild(englishGroup);
+        }
+
+        // Add other voices
+        if (otherVoices.length > 0) {
+          const otherGroup = document.createElement('optgroup');
+          otherGroup.label = 'Other Languages';
+          otherVoices.forEach((voice, index) => {
+            const option = document.createElement('option');
+            option.value = englishVoices.length + index;
+            option.textContent = `${voice.name} (${voice.lang})`;
+            otherGroup.appendChild(option);
+          });
+          voiceSelect.appendChild(otherGroup);
+        }
+
+        // Select first English voice or default
+        selectedVoice = englishVoices[0] || voices[0];
+        voiceSelect.value = 0;
+      }
+
+      loadVoices();
+      if (speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = loadVoices;
+      }
+
+      // Voice selection change
+      voiceSelect.addEventListener('change', (e) => {
+        const voices = speechSynthesis.getVoices();
+        selectedVoice = voices[e.target.value];
+      });
+
+      // Speak button
+      speakBtn.addEventListener('click', () => {
+        const text = textInput.value.trim();
+        if (!text) {
+          alert('Please enter some text to speak');
+          return;
+        }
+
+        // Stop any ongoing speech
+        if (speechSynthesis.speaking) {
+          speechSynthesis.cancel();
+        }
+
+        // Create utterance
+        utterance = new SpeechSynthesisUtterance(text);
+        utterance.voice = selectedVoice;
+        utterance.rate = 0.95;
+        utterance.pitch = 1.0;
+        utterance.volume = 1.0;
+
+        // Event handlers
+        utterance.onstart = () => {
+          speakBtn.style.display = 'none';
+          pauseBtn.style.display = 'flex';
+          stopBtn.style.display = 'flex';
+          speakingIndicator.style.display = 'flex';
+          speakingText.textContent = 'Speaking...';
+        };
+
+        utterance.onend = () => {
+          speakBtn.style.display = 'flex';
+          pauseBtn.style.display = 'none';
+          resumeBtn.style.display = 'none';
+          stopBtn.style.display = 'none';
+          speakingIndicator.style.display = 'none';
+        };
+
+        utterance.onerror = (event) => {
+          console.error('Speech error:', event);
+          speakBtn.style.display = 'flex';
+          pauseBtn.style.display = 'none';
+          resumeBtn.style.display = 'none';
+          stopBtn.style.display = 'none';
+          speakingIndicator.style.display = 'none';
+          alert('Speech error: ' + event.error);
+        };
+
+        utterance.onpause = () => {
+          pauseBtn.style.display = 'none';
+          resumeBtn.style.display = 'flex';
+          speakingText.textContent = 'Paused';
+        };
+
+        utterance.onresume = () => {
+          pauseBtn.style.display = 'flex';
+          resumeBtn.style.display = 'none';
+          speakingText.textContent = 'Speaking...';
+        };
+
+        // Speak
+        speechSynthesis.speak(utterance);
+      });
+
+      // Pause button
+      pauseBtn.addEventListener('click', () => {
+        if (speechSynthesis.speaking && !speechSynthesis.paused) {
+          speechSynthesis.pause();
+        }
+      });
+
+      // Resume button
+      resumeBtn.addEventListener('click', () => {
+        if (speechSynthesis.paused) {
+          speechSynthesis.resume();
+        }
+      });
+
+      // Stop button
+      stopBtn.addEventListener('click', () => {
+        if (speechSynthesis.speaking) {
+          speechSynthesis.cancel();
+        }
+      });
+
+    } else {
+      supportStatus.className = 'status error';
+      supportStatus.innerHTML = '❌ <strong>Text-to-speech is not supported</strong> in this browser. Please use Chrome, Edge, Safari, or Firefox.';
+      speakBtn.disabled = true;
+      voiceSelect.disabled = true;
+      textInput.disabled = true;
+    }
+  </script>
+</body>
+</html>

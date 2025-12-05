@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RAG Insights Demo - Issue #64</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .animate-fadeIn {
+      animation: fadeIn 600ms ease-out;
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-screen p-8">
+  <div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="text-center mb-12">
+      <h1 class="text-5xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-4">
+        RAG Insights Demo
+      </h1>
+      <p class="text-xl text-gray-600">Issue #64: Intelligent Insights Report Implementation</p>
+      <p class="text-sm text-gray-500 mt-2">Human-readable explanations powered by RAG</p>
+    </div>
+
+    <!-- API Test Section -->
+    <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6">Test RAG API</h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Result Type</label>
+          <select id="resultType" class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+            <option value="benign">Benign</option>
+            <option value="suspicious">Suspicious</option>
+            <option value="malignant">Malignant</option>
+          </select>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Confidence</label>
+          <input 
+            type="number" 
+            id="confidence" 
+            value="0.85" 
+            min="0" 
+            max="1" 
+            step="0.01"
+            class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+          />
+        </div>
+        
+        <div class="flex items-end">
+          <button 
+            onclick="generateInsights()"
+            class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-2 px-6 rounded-lg hover:from-indigo-700 hover:to-purple-700 transition font-semibold"
+          >
+            Generate Insights
+          </button>
+        </div>
+      </div>
+
+      <div class="flex gap-4 mb-6">
+        <button 
+          onclick="searchKnowledge()"
+          class="flex-1 bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition font-semibold"
+        >
+          Search Knowledge Base
+        </button>
+        <button 
+          onclick="getPrevention()"
+          class="flex-1 bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition font-semibold"
+        >
+          Get Prevention Tips
+        </button>
+        <button 
+          onclick="getRiskFactors()"
+          class="flex-1 bg-orange-500 text-white py-2 px-4 rounded-lg hover:bg-orange-600 transition font-semibold"
+        >
+          Get Risk Factors
+        </button>
+      </div>
+
+      <div id="loading" class="hidden text-center py-8">
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        <p class="text-gray-600 mt-4">Generating insights...</p>
+      </div>
+
+      <div id="error" class="hidden bg-red-50 border-2 border-red-200 text-red-800 px-5 py-4 rounded-xl"></div>
+    </div>
+
+    <!-- Results Display -->
+    <div id="results" class="space-y-6"></div>
+
+    <!-- Example Insights -->
+    <div class="bg-white rounded-2xl shadow-xl p-8 mt-8">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6">Example Insights</h2>
+      
+      <div class="space-y-4">
+        <details class="bg-green-50 border-2 border-green-200 rounded-xl p-4">
+          <summary class="font-bold text-green-900 cursor-pointer">Benign Lesion Example (92% confidence)</summary>
+          <div class="mt-4 text-sm text-gray-700 space-y-2">
+            <p><strong>Explanation:</strong> Based on the analysis with 92% confidence, this lesion strongly suggests a benign (non-cancerous) skin condition. The features observed are consistent with Seborrheic Keratosis...</p>
+            <p><strong>Risk Level:</strong> No cancer risk</p>
+            <p><strong>Recommendations:</strong> Continue routine skin self-examinations monthly, Annual dermatology check-up recommended</p>
+          </div>
+        </details>
+
+        <details class="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4">
+          <summary class="font-bold text-yellow-900 cursor-pointer">Suspicious Lesion Example (73% confidence)</summary>
+          <div class="mt-4 text-sm text-gray-700 space-y-2">
+            <p><strong>Explanation:</strong> The analysis with 73% confidence may suggest a suspicious lesion that requires professional medical evaluation...</p>
+            <p><strong>ABCDE Warning Signs:</strong></p>
+            <ul class="list-disc list-inside ml-4">
+              <li>A: Asymmetry - One half doesn't match the other half</li>
+              <li>B: Border irregularity - Edges are ragged, notched, or blurred</li>
+              <li>C: Color variation - Multiple colors or uneven distribution</li>
+              <li>D: Diameter - Larger than 6mm (pencil eraser size)</li>
+              <li>E: Evolution - Changes in size, shape, color, or symptoms</li>
+            </ul>
+            <p><strong>Recommendations:</strong> Schedule dermatologist appointment within 2-4 weeks</p>
+          </div>
+        </details>
+
+        <details class="bg-red-50 border-2 border-red-200 rounded-xl p-4">
+          <summary class="font-bold text-red-900 cursor-pointer">Malignant Lesion Example (88% confidence)</summary>
+          <div class="mt-4 text-sm text-gray-700 space-y-2">
+            <p><strong>Explanation:</strong> With 88% confidence, this analysis indicates characteristics consistent with a potentially malignant lesion requiring immediate medical attention...</p>
+            <p><strong>Critical Features:</strong></p>
+            <ul class="list-disc list-inside ml-4">
+              <li>Highly irregular borders, multiple colors, asymmetrical</li>
+              <li>May be raised, ulcerated, or bleeding</li>
+              <li>May itch, hurt, or bleed spontaneously</li>
+              <li>Rapid or noticeable changes in size or appearance</li>
+            </ul>
+            <p><strong>Urgent Recommendations:</strong> Schedule dermatologist appointment immediately (within 1-2 weeks)</p>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- Documentation Links -->
+    <div class="bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-2xl p-8 mt-8">
+      <h2 class="text-2xl font-bold text-indigo-900 mb-4">📚 Documentation</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <a href="../ISSUE_64_RAG_INSIGHTS_IMPLEMENTATION.md" class="bg-white p-4 rounded-lg shadow hover:shadow-lg transition">
+          <h3 class="font-bold text-indigo-600 mb-2">Full Implementation Guide</h3>
+          <p class="text-sm text-gray-600">Complete documentation of the RAG insights feature</p>
+        </a>
+        <a href="../RAG_INSIGHTS_QUICK_START.md" class="bg-white p-4 rounded-lg shadow hover:shadow-lg transition">
+          <h3 class="font-bold text-purple-600 mb-2">Quick Start Guide</h3>
+          <p class="text-sm text-gray-600">Get started with RAG insights in minutes</p>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = 'http://localhost:5001/api/ai';
+
+    async function generateInsights() {
+      const result = document.getElementById('resultType').value;
+      const confidence = parseFloat(document.getElementById('confidence').value);
+      
+      showLoading();
+      hideError();
+      
+      try {
+        const response = await fetch(`${API_BASE}/insights`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ result, confidence })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        displayInsights(data.data, result);
+      } catch (error) {
+        showError(`Error: ${error.message}. Make sure the server is running on port 5001.`);
+      } finally {
+        hideLoading();
+      }
+    }
+
+    async function searchKnowledge() {
+      const query = prompt('Enter search query:', 'melanoma');
+      if (!query) return;
+      
+      showLoading();
+      hideError();
+      
+      try {
+        const response = await fetch(`${API_BASE}/knowledge/search?q=${encodeURIComponent(query)}`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        
+        const data = await response.json();
+        displaySearchResults(data.results, query);
+      } catch (error) {
+        showError(`Error: ${error.message}`);
+      } finally {
+        hideLoading();
+      }
+    }
+
+    async function getPrevention() {
+      showLoading();
+      hideError();
+      
+      try {
+        const response = await fetch(`${API_BASE}/knowledge/prevention`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        
+        const data = await response.json();
+        displayPrevention(data.data);
+      } catch (error) {
+        showError(`Error: ${error.message}`);
+      } finally {
+        hideLoading();
+      }
+    }
+
+    async function getRiskFactors() {
+      showLoading();
+      hideError();
+      
+      try {
+        const response = await fetch(`${API_BASE}/knowledge/risk-factors`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        
+        const data = await response.json();
+        displayRiskFactors(data.data);
+      } catch (error) {
+        showError(`Error: ${error.message}`);
+      } finally {
+        hideLoading();
+      }
+    }
+
+    function displayInsights(insights, result) {
+      const colors = {
+        benign: { bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-900' },
+        suspicious: { bg: 'bg-yellow-50', border: 'border-yellow-200', text: 'text-yellow-900' },
+        malignant: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-900' }
+      };
+      const color = colors[result];
+      
+      const html = `
+        <div class="animate-fadeIn space-y-6">
+          <div class="${color.bg} ${color.border} border-2 rounded-xl p-6 shadow-lg">
+            <h3 class="text-xl font-bold ${color.text} mb-3">📖 Intelligent Analysis</h3>
+            <p class="text-gray-700 leading-relaxed">${insights.explanation}</p>
+          </div>
+          
+          ${insights.medicalContext ? `
+            <div class="bg-white border-2 border-gray-200 rounded-xl p-6 shadow-lg">
+              <h3 class="text-xl font-bold text-gray-900 mb-3">ℹ️ Medical Context</h3>
+              <div class="space-y-2">
+                <p><strong>Lesion Type:</strong> ${insights.medicalContext.lesionType}</p>
+                <p class="text-gray-600">${insights.medicalContext.description}</p>
+                <div class="grid grid-cols-2 gap-4 mt-4">
+                  <div class="bg-gray-50 p-3 rounded-lg">
+                    <p class="text-xs text-gray-500 font-medium uppercase">Prevalence</p>
+                    <p class="text-sm text-gray-700 font-semibold mt-1">${insights.medicalContext.prevalence}</p>
+                  </div>
+                  <div class="bg-gray-50 p-3 rounded-lg">
+                    <p class="text-xs text-gray-500 font-medium uppercase">Risk Level</p>
+                    <p class="text-sm text-gray-700 font-semibold mt-1">${insights.medicalContext.riskLevel}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ` : ''}
+          
+          <div class="bg-white border-2 border-gray-200 rounded-xl p-6 shadow-lg">
+            <h3 class="text-xl font-bold text-gray-900 mb-4">✅ Key Findings</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              ${insights.keyFindings.map(f => `
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                  <p class="text-xs text-gray-500 font-medium uppercase mb-1">${f.category}</p>
+                  <p class="text-sm text-gray-800 font-semibold">${f.finding}</p>
+                  ${f.confidence ? `<p class="text-xs text-gray-600 mt-1">${f.confidence}</p>` : ''}
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          
+          ${insights.warningSigns ? `
+            <div class="${color.bg} ${color.border} border-2 rounded-xl p-6 shadow-lg">
+              <h3 class="text-xl font-bold ${color.text} mb-4">⚠️ ${insights.warningSigns.title}</h3>
+              ${insights.warningSigns.signs ? insights.warningSigns.signs.map(s => `
+                <div class="bg-white/70 p-3 rounded-lg mb-2">
+                  <strong class="${color.text}">${s.letter}:</strong> ${s.description}
+                </div>
+              `).join('') : ''}
+              ${insights.warningSigns.features ? Object.entries(insights.warningSigns.features).map(([k, v]) => `
+                <div class="bg-white/70 p-3 rounded-lg mb-2">
+                  <strong class="${color.text} capitalize">${k}:</strong> ${v}
+                </div>
+              `).join('') : ''}
+            </div>
+          ` : ''}
+          
+          <div class="bg-gradient-to-br from-indigo-50 to-blue-50 border-2 border-indigo-200 rounded-xl p-6 shadow-lg">
+            <h3 class="text-xl font-bold text-indigo-900 mb-4">💡 Recommended Actions</h3>
+            <ul class="space-y-3">
+              ${insights.recommendations.map(r => `
+                <li class="flex items-start gap-3">
+                  <div class="bg-indigo-100 rounded-full p-1 mt-0.5">
+                    <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                  </div>
+                  <span class="text-gray-700 flex-1">${r}</span>
+                </li>
+              `).join('')}
+            </ul>
+          </div>
+          
+          <div class="bg-gray-50 border-2 border-gray-300 rounded-xl p-5 shadow-sm">
+            <p class="text-xs font-semibold text-gray-600 uppercase mb-1">⚖️ Important Disclaimer</p>
+            <p class="text-sm text-gray-600 leading-relaxed">${insights.disclaimer}</p>
+          </div>
+        </div>
+      `;
+      
+      document.getElementById('results').innerHTML = html;
+    }
+
+    function displaySearchResults(results, query) {
+      const html = `
+        <div class="animate-fadeIn bg-white border-2 border-gray-200 rounded-xl p-6 shadow-lg">
+          <h3 class="text-xl font-bold text-gray-900 mb-4">🔍 Search Results for "${query}"</h3>
+          <div class="space-y-4">
+            ${results.map(r => `
+              <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <div class="flex justify-between items-start mb-2">
+                  <h4 class="font-bold text-gray-800">${r.lesion}</h4>
+                  <span class="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full">
+                    ${(r.relevanceScore * 100).toFixed(1)}% match
+                  </span>
+                </div>
+                <p class="text-sm text-gray-600 mb-2">${r.description}</p>
+                <span class="text-xs text-gray-500 uppercase font-medium">${r.category}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+      
+      document.getElementById('results').innerHTML = html;
+    }
+
+    function displayPrevention(data) {
+      const html = `
+        <div class="animate-fadeIn bg-white border-2 border-gray-200 rounded-xl p-6 shadow-lg">
+          <h3 class="text-xl font-bold text-gray-900 mb-4">🛡️ Prevention Guidelines</h3>
+          
+          <div class="space-y-6">
+            <div>
+              <h4 class="font-bold text-indigo-600 mb-3">☀️ Sun Protection</h4>
+              <ul class="space-y-2">
+                ${data.sunProtection.map(tip => `<li class="text-gray-700">• ${tip}</li>`).join('')}
+              </ul>
+            </div>
+            
+            <div>
+              <h4 class="font-bold text-purple-600 mb-3">🔍 Self-Examination</h4>
+              <ul class="space-y-2">
+                ${data.selfExamination.map(tip => `<li class="text-gray-700">• ${tip}</li>`).join('')}
+              </ul>
+            </div>
+            
+            <div>
+              <h4 class="font-bold text-blue-600 mb-3">👨‍⚕️ Professional Care</h4>
+              <ul class="space-y-2">
+                ${data.professionalCare.map(tip => `<li class="text-gray-700">• ${tip}</li>`).join('')}
+              </ul>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      document.getElementById('results').innerHTML = html;
+    }
+
+    function displayRiskFactors(data) {
+      const html = `
+        <div class="animate-fadeIn bg-white border-2 border-gray-200 rounded-xl p-6 shadow-lg">
+          <h3 class="text-xl font-bold text-gray-900 mb-4">⚠️ Risk Factors</h3>
+          
+          <div class="space-y-6">
+            <div>
+              <h4 class="font-bold text-orange-600 mb-3">🌍 Environmental Factors</h4>
+              <ul class="space-y-2">
+                ${data.environmental.map(factor => `<li class="text-gray-700">• ${factor}</li>`).join('')}
+              </ul>
+            </div>
+            
+            <div>
+              <h4 class="font-bold text-red-600 mb-3">🧬 Genetic Factors</h4>
+              <ul class="space-y-2">
+                ${data.genetic.map(factor => `<li class="text-gray-700">• ${factor}</li>`).join('')}
+              </ul>
+            </div>
+            
+            <div>
+              <h4 class="font-bold text-pink-600 mb-3">🏥 Medical Factors</h4>
+              <ul class="space-y-2">
+                ${data.medical.map(factor => `<li class="text-gray-700">• ${factor}</li>`).join('')}
+              </ul>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      document.getElementById('results').innerHTML = html;
+    }
+
+    function showLoading() {
+      document.getElementById('loading').classList.remove('hidden');
+      document.getElementById('results').innerHTML = '';
+    }
+
+    function hideLoading() {
+      document.getElementById('loading').classList.add('hidden');
+    }
+
+    function showError(message) {
+      const errorDiv = document.getElementById('error');
+      errorDiv.textContent = message;
+      errorDiv.classList.remove('hidden');
+    }
+
+    function hideError() {
+      document.getElementById('error').classList.add('hidden');
+    }
+  </script>
+</body>
+</html>

@@ -86,6 +86,23 @@ export default function Layout() {
               </NavLink>
               
               <NavLink 
+                to="/insights-showcase" 
+                className={({ isActive }) => `
+                  flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all duration-300 relative
+                  ${isActive 
+                    ? 'bg-gradient-to-r from-pink-600 to-purple-600 text-white shadow-lg scale-105' 
+                    : 'text-gray-700 hover:bg-white hover:shadow-md'
+                  }
+                `}
+              >
+                <Sparkles size={18} className="animate-pulse" />
+                <span>AI Insights</span>
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full font-bold">
+                  NEW
+                </span>
+              </NavLink>
+              
+              <NavLink 
                 to="/recommendations" 
                 className={({ isActive }) => `
                   flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all duration-300

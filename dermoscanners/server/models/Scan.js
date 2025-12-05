@@ -31,6 +31,10 @@ const scanSchema = new mongoose.Schema(
       type: String,
       maxlength: 500
     },
+    insights: {
+      type: mongoose.Schema.Types.Mixed,
+      required: false
+    },
     timestamp: {
       type: Date,
       default: Date.now,

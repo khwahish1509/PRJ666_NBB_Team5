@@ -1,0 +1,190 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2025-12-01",
+  "description": "Medical knowledge base for skin lesion analysis - Educational purposes only",
+  "disclaimer": "This information is for educational purposes only and should not be used for medical diagnosis. Always consult a qualified healthcare professional.",
+  
+  "lesionTypes": {
+    "benign": {
+      "commonTypes": [
+        {
+          "name": "Seborrheic Keratosis",
+          "description": "Common non-cancerous skin growth that appears as a brown, black, or tan growth with a waxy, scaly, slightly elevated appearance",
+          "characteristics": ["Well-defined borders", "Uniform color", "Waxy or stuck-on appearance", "Slow growth"],
+          "prevalence": "Very common in adults over 50",
+          "riskLevel": "No cancer risk"
+        },
+        {
+          "name": "Dermatofibroma",
+          "description": "Small, firm bump that often appears on the legs, typically brownish in color",
+          "characteristics": ["Firm to touch", "Dimples when pinched", "Usually less than 1cm", "Stable size"],
+          "prevalence": "Common, especially in women",
+          "riskLevel": "Benign, no cancer risk"
+        },
+        {
+          "name": "Common Nevus (Mole)",
+          "description": "Benign growth of melanocytes that appears as a small, dark spot on the skin",
+          "characteristics": ["Symmetrical shape", "Even borders", "Uniform color", "Diameter less than 6mm"],
+          "prevalence": "Most adults have 10-40 moles",
+          "riskLevel": "Generally harmless, monitor for changes"
+        }
+      ],
+      "generalCharacteristics": {
+        "borders": "Well-defined, regular, and smooth edges",
+        "asymmetry": "Symmetrical appearance when divided in half",
+        "color": "Uniform color throughout, typically one shade",
+        "diameter": "Usually stable in size, often less than 6mm",
+        "evolution": "Minimal or no changes over time"
+      },
+      "recommendations": [
+        "Continue routine skin self-examinations monthly",
+        "Annual dermatology check-up recommended",
+        "Monitor for any changes in size, color, or shape",
+        "Protect skin from excessive sun exposure",
+        "Document with photos for future comparison"
+      ]
+    },
+    
+    "suspicious": {
+      "commonTypes": [
+        {
+          "name": "Atypical Nevus (Dysplastic Nevus)",
+          "description": "Unusual-looking mole that may have irregular features but is not yet cancerous",
+          "characteristics": ["Irregular borders", "Multiple colors", "Larger than typical moles", "Flat with raised center"],
+          "prevalence": "5-10% of adults have at least one",
+          "riskLevel": "Increased melanoma risk, requires monitoring"
+        },
+        {
+          "name": "Actinic Keratosis",
+          "description": "Rough, scaly patch caused by sun damage that could potentially develop into skin cancer",
+          "characteristics": ["Rough texture", "Scaly surface", "Pink, red, or brown color", "Often on sun-exposed areas"],
+          "prevalence": "Very common in fair-skinned individuals over 40",
+          "riskLevel": "Precancerous, 5-10% may progress to squamous cell carcinoma"
+        },
+        {
+          "name": "Changing Lesion",
+          "description": "Any skin lesion showing changes in the ABCDE criteria",
+          "characteristics": ["Recent changes in appearance", "Irregular features", "Evolving characteristics", "Uncertain classification"],
+          "prevalence": "Varies",
+          "riskLevel": "Requires professional evaluation"
+        }
+      ],
+      "warningSignsABCDE": {
+        "A": "Asymmetry - One half doesn't match the other half",
+        "B": "Border irregularity - Edges are ragged, notched, or blurred",
+        "C": "Color variation - Multiple colors or uneven distribution",
+        "D": "Diameter - Larger than 6mm (pencil eraser size)",
+        "E": "Evolution - Changes in size, shape, color, or symptoms"
+      },
+      "recommendations": [
+        "Schedule dermatologist appointment within 2-4 weeks",
+        "Avoid further sun exposure to the area",
+        "Do not attempt to remove or treat at home",
+        "Document with clear photos from multiple angles",
+        "Note any symptoms: itching, bleeding, or pain",
+        "Bring list of any changes you've observed"
+      ]
+    },
+    
+    "malignant": {
+      "commonTypes": [
+        {
+          "name": "Melanoma",
+          "description": "Most serious type of skin cancer that develops in melanocytes",
+          "characteristics": ["Asymmetrical shape", "Irregular borders", "Multiple colors", "Diameter over 6mm", "Evolving appearance"],
+          "prevalence": "1 in 27 men and 1 in 40 women will develop melanoma",
+          "riskLevel": "High risk, can spread to other organs if untreated"
+        },
+        {
+          "name": "Basal Cell Carcinoma",
+          "description": "Most common form of skin cancer, appears as a pearly or waxy bump",
+          "characteristics": ["Pearly or translucent appearance", "Visible blood vessels", "Central depression", "May bleed easily"],
+          "prevalence": "Most common cancer worldwide",
+          "riskLevel": "Rarely spreads but can be locally destructive"
+        },
+        {
+          "name": "Squamous Cell Carcinoma",
+          "description": "Second most common skin cancer, appears as a firm red nodule or flat lesion",
+          "characteristics": ["Firm, red nodule", "Scaly, crusted surface", "May ulcerate", "Often on sun-exposed areas"],
+          "prevalence": "Second most common skin cancer",
+          "riskLevel": "Can spread if untreated, requires prompt treatment"
+        }
+      ],
+      "criticalFeatures": {
+        "appearance": "Highly irregular borders, multiple colors, asymmetrical",
+        "texture": "May be raised, ulcerated, or bleeding",
+        "symptoms": "May itch, hurt, or bleed spontaneously",
+        "growth": "Rapid or noticeable changes in size or appearance"
+      },
+      "urgentRecommendations": [
+        "Schedule dermatologist appointment immediately (within 1-2 weeks)",
+        "Request urgent evaluation if rapidly changing",
+        "Prepare medical history including sun exposure and family history",
+        "Document all symptoms and timeline of changes",
+        "Do not delay - early detection significantly improves outcomes",
+        "Consider seeking second opinion if diagnosis unclear"
+      ]
+    }
+  },
+  
+  "riskFactors": {
+    "environmental": [
+      "Excessive UV exposure from sun or tanning beds",
+      "History of severe sunburns, especially in childhood",
+      "Living in high-altitude or sunny climates",
+      "Occupational sun exposure"
+    ],
+    "genetic": [
+      "Fair skin, light hair, and light eyes",
+      "Family history of melanoma or skin cancer",
+      "Large number of moles (over 50)",
+      "Presence of atypical moles",
+      "Genetic conditions like xeroderma pigmentosum"
+    ],
+    "medical": [
+      "Weakened immune system",
+      "Previous skin cancer diagnosis",
+      "Certain medications that increase sun sensitivity",
+      "History of radiation therapy"
+    ]
+  },
+  
+  "preventionGuidelines": {
+    "sunProtection": [
+      "Use broad-spectrum SPF 30+ sunscreen daily",
+      "Reapply sunscreen every 2 hours when outdoors",
+      "Seek shade during peak sun hours (10am-4pm)",
+      "Wear protective clothing, wide-brimmed hats, and UV-blocking sunglasses",
+      "Avoid tanning beds completely"
+    ],
+    "selfExamination": [
+      "Perform monthly skin self-exams",
+      "Check entire body including scalp, between toes, and back",
+      "Use mirrors or ask partner to check hard-to-see areas",
+      "Document suspicious lesions with photos",
+      "Follow the ABCDE rule for mole evaluation"
+    ],
+    "professionalCare": [
+      "Annual full-body skin exam by dermatologist",
+      "More frequent exams if high-risk factors present",
+      "Immediate evaluation of any changing or concerning lesions",
+      "Keep records of all skin examinations and biopsies"
+    ]
+  },
+  
+  "educationalResources": {
+    "sources": [
+      "American Academy of Dermatology (AAD)",
+      "Skin Cancer Foundation",
+      "National Cancer Institute (NCI)",
+      "World Health Organization (WHO)",
+      "PubMed medical literature database"
+    ],
+    "references": [
+      "Melanoma: Clinical features and diagnosis - UpToDate",
+      "Skin Cancer Prevention (PDQ) - National Cancer Institute",
+      "ABCDE Rule for Melanoma Detection - Skin Cancer Foundation",
+      "HAM10000 Dataset: A Large Collection of Multi-Source Dermatoscopic Images"
+    ]
+  }
+}

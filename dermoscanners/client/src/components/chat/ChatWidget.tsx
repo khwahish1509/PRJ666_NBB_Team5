@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Sparkles, Zap } from 'lucide-react';
+import { MessageCircle, X, Send, Sparkles, Zap, Mic, MicOff, Volume2, VolumeX, Pause, Play } from 'lucide-react';
 import axios from 'axios';
+import { useSpeechRecognition } from '../../hooks/useSpeechRecognition';
+import { useSpeechSynthesis } from '../../hooks/useSpeechSynthesis';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -20,6 +22,31 @@ const ChatWidget: React.FC = () => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const API_URL = import.meta.env.VITE_API_URL;
+
+  // Voice recognition hook (Speech-to-Text)
+  const { 
+    isListening, 
+    transcript, 
+    isSupported, 
+    error: voiceError,
+    startListening, 
+    stopListening,
+    resetTranscript 
+  } = useSpeechRecognition();
+
+  // Speech synthesis hook (Text-to-Speech)
+  const {
+    isSpeaking,
+    isPaused,
+    isSupported: isTTSSupported,
+    speak,
+    pause: pauseSpeech,
+    resume: resumeSpeech,
+    stop: stopSpeech
+  } = useSpeechSynthesis();
+
+  // Track which message is currently being spoken
+  const [speakingMessageIndex, setSpeakingMessageIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (isOpen && messages.length === 0) {
@@ -44,6 +71,52 @@ const ChatWidget: React.FC = () => {
       inputRef.current.focus();
     }
   }, [isOpen]);
+
+  // Sync voice transcript to input field
+  useEffect(() => {
+    if (transcript) {
+      setInputMessage(transcript);
+    }
+  }, [transcript]);
+
+  // Handle voice input toggle
+  const handleVoiceToggle = () => {
+    if (isListening) {
+      stopListening();
+    } else {
+      resetTranscript();
+      startListening();
+    }
+  };
+
+  // Handle text-to-speech for assistant messages
+  const handleSpeak = (text: string, index: number) => {
+    if (speakingMessageIndex === index && isSpeaking) {
+      // If this message is currently speaking, stop it
+      stopSpeech();
+      setSpeakingMessageIndex(null);
+    } else {
+      // Stop any current speech and speak this message
+      stopSpeech();
+      setSpeakingMessageIndex(index);
+      speak(text);
+    }
+  };
+
+  const handlePauseResume = () => {
+    if (isPaused) {
+      resumeSpeech();
+    } else {
+      pauseSpeech();
+    }
+  };
+
+  // Reset speaking state when speech ends
+  useEffect(() => {
+    if (!isSpeaking && speakingMessageIndex !== null) {
+      setSpeakingMessageIndex(null);
+    }
+  }, [isSpeaking]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -133,7 +206,11 @@ const ChatWidget: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isListening) {
+      stopListening();
+    }
     sendMessage(inputMessage);
+    resetTranscript();
   };
 
   const handleSuggestionClick = (suggestion: string) => {
@@ -200,9 +277,58 @@ const ChatWidget: React.FC = () => {
                   >
                     <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
                   </div>
-                  <span className="text-xs text-gray-400 mt-1 px-1">
-                    {formatTime(msg.timestamp)}
-                  </span>
+                  
+                  {/* Time and TTS controls for assistant messages */}
+                  <div className="flex items-center gap-2 mt-1 px-1">
+                    <span className="text-xs text-gray-400">
+                      {formatTime(msg.timestamp)}
+                    </span>
+                    
+                    {/* Text-to-Speech button for assistant messages */}
+                    {msg.role === 'assistant' && isTTSSupported && (
+                      <div className="flex items-center gap-1">
+                        {speakingMessageIndex === index && isSpeaking ? (
+                          <>
+                            {/* Pause/Resume button */}
+                            <button
+                              onClick={handlePauseResume}
+                              className="p-1 rounded hover:bg-gray-100 transition-colors"
+                              title={isPaused ? "Resume" : "Pause"}
+                            >
+                              {isPaused ? (
+                                <Play size={14} className="text-blue-600" />
+                              ) : (
+                                <Pause size={14} className="text-blue-600" />
+                              )}
+                            </button>
+                            {/* Stop button */}
+                            <button
+                              onClick={() => {
+                                stopSpeech();
+                                setSpeakingMessageIndex(null);
+                              }}
+                              className="p-1 rounded hover:bg-gray-100 transition-colors"
+                              title="Stop"
+                            >
+                              <VolumeX size={14} className="text-red-600" />
+                            </button>
+                            {/* Speaking indicator */}
+                            <span className="text-xs text-blue-600 font-medium animate-pulse">
+                              {isPaused ? 'Paused' : 'Speaking...'}
+                            </span>
+                          </>
+                        ) : (
+                          <button
+                            onClick={() => handleSpeak(msg.content, index)}
+                            className="p-1 rounded hover:bg-gray-100 transition-colors group"
+                            title="Listen to this message"
+                          >
+                            <Volume2 size={14} className="text-gray-400 group-hover:text-blue-600 transition-colors" />
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
@@ -248,18 +374,57 @@ const ChatWidget: React.FC = () => {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input with modern styling */}
+          {/* Input with modern styling and voice button */}
           <form onSubmit={handleSubmit} className="p-4 border-t border-gray-200 bg-white rounded-b-2xl">
+            {/* Voice error message */}
+            {voiceError && (
+              <div className="mb-2 p-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-600 flex items-start gap-2">
+                <span className="flex-shrink-0">⚠️</span>
+                <span>{voiceError}</span>
+              </div>
+            )}
+
+            {/* Recording indicator */}
+            {isListening && (
+              <div className="mb-2 p-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-600 flex items-center gap-2 animate-pulse">
+                <div className="flex gap-1">
+                  <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                  <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                  <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                </div>
+                <span className="font-medium">Recording... Speak now</span>
+              </div>
+            )}
+
             <div className="flex gap-2">
               <input
                 ref={inputRef}
                 type="text"
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
-                placeholder="Ask about skincare..."
+                placeholder={isListening ? "Listening..." : "Ask about skincare..."}
                 className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-50 disabled:cursor-not-allowed"
                 disabled={isLoading}
               />
+              
+              {/* Voice input button */}
+              {isSupported && (
+                <button
+                  type="button"
+                  onClick={handleVoiceToggle}
+                  disabled={isLoading}
+                  className={`p-3 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 ${
+                    isListening
+                      ? 'bg-red-500 text-white animate-pulse shadow-lg'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:shadow-md'
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  aria-label={isListening ? "Stop recording" : "Start voice input"}
+                  title={isListening ? "Stop recording" : "Click to speak"}
+                >
+                  {isListening ? <MicOff size={20} /> : <Mic size={20} />}
+                </button>
+              )}
+
               <button
                 type="submit"
                 disabled={isLoading || !inputMessage.trim()}
@@ -269,6 +434,13 @@ const ChatWidget: React.FC = () => {
                 <Send size={20} />
               </button>
             </div>
+
+            {/* Browser support hint */}
+            {!isSupported && (
+              <div className="mt-2 text-xs text-gray-500 text-center">
+                💡 Voice input works best in Chrome, Edge, or Safari
+              </div>
+            )}
           </form>
         </div>
       )}

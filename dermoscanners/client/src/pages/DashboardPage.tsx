@@ -107,6 +107,37 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* NEW FEATURE ANNOUNCEMENT - Issue #64 */}
+      <div 
+        onClick={() => navigate('/insights-showcase')}
+        className="bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 rounded-2xl p-6 text-white shadow-2xl cursor-pointer hover:scale-[1.02] transition-all duration-300 relative overflow-hidden group"
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        <div className="relative z-10 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="bg-white/20 backdrop-blur-sm p-3 rounded-xl animate-pulse">
+              <Sparkles size={32} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-bold animate-bounce">
+                  NEW
+                </span>
+                <h3 className="text-2xl font-bold">AI-Powered Intelligent Insights</h3>
+              </div>
+              <p className="text-white/90">
+                Get comprehensive, human-readable explanations for your scan results with RAG technology
+              </p>
+            </div>
+          </div>
+          <div className="hidden md:block">
+            <button className="bg-white text-purple-600 px-6 py-3 rounded-xl font-bold hover:bg-purple-50 transition">
+              Explore Now →
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Quick Actions */}
       <div>
         <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">

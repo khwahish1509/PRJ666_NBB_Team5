@@ -9,6 +9,7 @@ import { Upload, Loader2, History, AlertCircle, CheckCircle, Sparkles } from 'lu
 import api from '../services/api';
 import { BrowserMultiFormatReader } from '@zxing/library';
 import ResultCard from '../components/scan/ResultCard';
+import InsightsCard, { Insight } from '../components/scan/InsightsCard';
 import RecommendationPanel from '../components/scan/RecommendationPanel';
 import ClinicianCard from '../components/clinician/ClinicianCard';
 import { saveScan } from '../utils/scanStorage';
@@ -19,6 +20,7 @@ interface ScanResult {
   confidence: number;
   processingTime: number;
   timestamp: string;
+  insights?: Insight;
 }
 
 export default function ScanPage() {
@@ -187,6 +189,7 @@ export default function ScanPage() {
           processingTime: scan.processingTime,
           timestamp: scan.timestamp,
           imageUrl: scan.imageUrl,
+          insights: result.insights, // Save insights to database
         });
         
         // Show save confirmation toast
@@ -535,6 +538,14 @@ export default function ScanPage() {
               processingTime={scanResult.processingTime}
               timestamp={scanResult.timestamp}
             />
+
+            {/* Intelligent Insights Card - RAG-generated explanation */}
+            {scanResult.insights && (
+              <InsightsCard
+                insights={scanResult.insights}
+                result={scanResult.result}
+              />
+            )}
 
             {/* Recommendation Panel */}
             <RecommendationPanel result={scanResult.result} />

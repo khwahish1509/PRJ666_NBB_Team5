@@ -3,18 +3,25 @@ const fetch = globalThis.fetch;
 
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
-// System prompt for the chatbot
-const SYSTEM_CONTEXT = `You are a helpful skincare assistant for DermoScanners, a skin analysis application. 
+// Base system prompt for the chatbot
+const BASE_SYSTEM_CONTEXT = `You are a helpful skincare assistant for DermoScanners, a skin analysis application. 
 Your role is to:
 - Answer general skincare questions
 - Explain skin conditions in simple terms
 - Provide skincare tips and advice
 - Recommend appropriate product types (moisturizers, cleansers, sunscreens, etc.)
+- Use the provided context about user profile, scanned products, and ingredient data to give personalized advice
 
 IMPORTANT DISCLAIMERS:
 - You are NOT a doctor and cannot diagnose medical conditions
 - Always recommend consulting a dermatologist for serious concerns
 - Provide general information only, not medical advice
+
+When context is provided:
+- Reference specific products by name when relevant
+- Mention safety ratings and ingredient concerns
+- Tailor advice to user's skin type and goals
+- Be specific about ingredient benefits and risks
 
 Be friendly, concise, and helpful. Keep responses under 150 words unless more detail is requested.`;
 
@@ -39,8 +46,16 @@ export const sendMessage = async (req, res) => {
       });
     }
 
-    // Build conversation context
-    let conversationText = SYSTEM_CONTEXT + '\n\n';
+    // Build conversation context with enriched data
+    let conversationText = BASE_SYSTEM_CONTEXT;
+    
+    // Add enriched context from middleware (if available)
+    if (req.chatContext?.hasContext && req.chatContext?.formatted) {
+      conversationText += req.chatContext.formatted;
+      console.log('[Chat] Context enriched with user/product data');
+    }
+    
+    conversationText += '\n\n';
     
     // Add recent conversation history (last 5 messages)
     const recentHistory = conversationHistory.slice(-5);

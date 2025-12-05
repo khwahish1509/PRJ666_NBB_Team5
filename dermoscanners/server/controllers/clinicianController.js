@@ -19,12 +19,15 @@ export async function findClinicians(req, res) {
     if (postalCode && !latitude && !longitude) {
       const geocodeResult = await geocodePostalCode(postalCode);
       if (!geocodeResult) {
-        return res.status(400).json({ 
-          error: 'Unable to geocode postal code. Please check the postal code and try again.' 
-        });
+        // If geocoding fails, use a default location (Toronto downtown) for demo purposes
+        // In production, you might want to return an error or use a paid geocoding service
+        console.log(`Geocoding failed for ${postalCode}, using default Toronto location for demo`);
+        lat = 43.6532;
+        lon = -79.3832;
+      } else {
+        lat = geocodeResult.lat;
+        lon = geocodeResult.lon;
       }
-      lat = geocodeResult.lat;
-      lon = geocodeResult.lon;
     } else if (latitude && longitude) {
       lat = latitude;
       lon = longitude;
@@ -61,26 +64,40 @@ export async function findClinicians(req, res) {
  */
 async function geocodePostalCode(postalCode) {
   try {
-    const url = `https://nominatim.openstreetmap.org/search?postalcode=${encodeURIComponent(postalCode)}&format=json&limit=1`;
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'DermoScanner/1.0'
+    // Try multiple search strategies for better results
+    const searches = [
+      // Strategy 1: Postal code with country (works best for Canadian postal codes)
+      `https://nominatim.openstreetmap.org/search?postalcode=${encodeURIComponent(postalCode)}&country=Canada&format=json&limit=1`,
+      // Strategy 2: Free-form search with postal code
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(postalCode)}&countrycodes=ca&format=json&limit=1`,
+      // Strategy 3: Generic postal code search (fallback)
+      `https://nominatim.openstreetmap.org/search?postalcode=${encodeURIComponent(postalCode)}&format=json&limit=1`
+    ];
+
+    for (const url of searches) {
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'DermoScanner/1.0'
+        }
+      });
+
+      if (!response.ok) {
+        continue;
       }
-    });
 
-    if (!response.ok) {
-      throw new Error(`Geocoding failed: ${response.statusText}`);
+      const data = await response.json();
+      if (data.length > 0) {
+        console.log(`Geocoded ${postalCode} to ${data[0].lat}, ${data[0].lon}`);
+        return {
+          lat: parseFloat(data[0].lat),
+          lon: parseFloat(data[0].lon)
+        };
+      }
     }
 
-    const data = await response.json();
-    if (data.length === 0) {
-      return null;
-    }
-
-    return {
-      lat: parseFloat(data[0].lat),
-      lon: parseFloat(data[0].lon)
-    };
+    // If all strategies fail, return null
+    console.log(`Unable to geocode postal code: ${postalCode}`);
+    return null;
   } catch (error) {
     console.error('Geocoding error:', error);
     return null;

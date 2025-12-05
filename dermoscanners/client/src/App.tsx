@@ -15,6 +15,7 @@ import ComparisonPage from './pages/ComparisonPage';
 import ComparisonSelectorPage from './pages/ComparisonSelectorPage';
 import RecommendationsPage from './pages/RecommendationsPage';
 import FeaturesShowcasePage from './pages/FeaturesShowcasePage';
+import InsightsShowcasePage from './pages/InsightsShowcasePage';
 import DemoPage from './pages/DemoPage';
 import ChatDemoPage from './pages/ChatDemoPage';
 import ClinicianFinderPage from './pages/ClinicianFinderPage';
@@ -118,6 +119,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <FeaturesShowcasePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/insights-showcase"
+              element={
+                <ProtectedRoute>
+                  <InsightsShowcasePage />
                 </ProtectedRoute>
               }
             />

@@ -1,11 +1,13 @@
 /**
  * AI Controller - Mock AI endpoint for skin lesion analysis
  * Simulates AI model inference without requiring a trained model
+ * Includes RAG-based intelligent insights generation
  */
 
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { generateInsights } from '../services/ragInsightsService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -41,17 +43,70 @@ export async function analyzeImage(req, res) {
 
     const processingTime = Date.now() - startTime;
     const timestamp = new Date().toISOString();
+    const finalConfidence = parseFloat(confidence.toFixed(2));
+
+    // Generate intelligent insights using RAG
+    let insights = null;
+    try {
+      insights = generateInsights(result, finalConfidence);
+    } catch (insightError) {
+      console.error('Error generating insights:', insightError);
+      // Continue without insights if generation fails
+    }
 
     return res.status(200).json({
       result,
-      confidence: parseFloat(confidence.toFixed(2)),
+      confidence: finalConfidence,
       processingTime,
-      timestamp
+      timestamp,
+      insights // Include RAG-generated insights
     });
   } catch (error) {
     console.error('Error in analyzeImage:', error);
     return res.status(500).json({ 
       error: 'Internal server error during image analysis' 
+    });
+  }
+}
+
+/**
+ * Get intelligent insights for a specific result and confidence
+ * POST /api/ai/insights
+ */
+export async function getInsights(req, res) {
+  try {
+    const { result, confidence } = req.body;
+
+    // Validate inputs
+    if (!result || confidence === undefined) {
+      return res.status(400).json({
+        error: 'Missing required fields: result and confidence'
+      });
+    }
+
+    if (!['benign', 'suspicious', 'malignant'].includes(result)) {
+      return res.status(400).json({
+        error: 'Invalid result. Must be one of: benign, suspicious, malignant'
+      });
+    }
+
+    if (confidence < 0 || confidence > 1) {
+      return res.status(400).json({
+        error: 'Confidence must be between 0 and 1'
+      });
+    }
+
+    // Generate insights
+    const insights = generateInsights(result, confidence);
+
+    return res.status(200).json({
+      success: true,
+      data: insights
+    });
+  } catch (error) {
+    console.error('Error in getInsights:', error);
+    return res.status(500).json({
+      error: 'Internal server error while generating insights'
     });
   }
 }
@@ -91,6 +146,78 @@ export async function getRecommendations(req, res) {
     console.error('Error in getRecommendations:', error);
     return res.status(500).json({ 
       error: 'Internal server error while fetching recommendations' 
+    });
+  }
+}
+
+/**
+ * Search knowledge base
+ * GET /api/ai/knowledge/search?q=query
+ */
+export async function searchKnowledge(req, res) {
+  try {
+    const { q } = req.query;
+
+    if (!q || q.trim().length === 0) {
+      return res.status(400).json({
+        error: 'Search query is required'
+      });
+    }
+
+    const { searchKnowledge: search } = await import('../services/ragInsightsService.js');
+    const results = search(q);
+
+    return res.status(200).json({
+      success: true,
+      query: q,
+      results
+    });
+  } catch (error) {
+    console.error('Error in searchKnowledge:', error);
+    return res.status(500).json({
+      error: 'Internal server error while searching knowledge base'
+    });
+  }
+}
+
+/**
+ * Get prevention guidelines
+ * GET /api/ai/knowledge/prevention
+ */
+export async function getPreventionGuidelines(req, res) {
+  try {
+    const { getPreventionGuidelines: getPrevention } = await import('../services/ragInsightsService.js');
+    const guidelines = getPrevention();
+
+    return res.status(200).json({
+      success: true,
+      data: guidelines
+    });
+  } catch (error) {
+    console.error('Error in getPreventionGuidelines:', error);
+    return res.status(500).json({
+      error: 'Internal server error while fetching prevention guidelines'
+    });
+  }
+}
+
+/**
+ * Get risk factors
+ * GET /api/ai/knowledge/risk-factors
+ */
+export async function getRiskFactorsInfo(req, res) {
+  try {
+    const { getRiskFactors } = await import('../services/ragInsightsService.js');
+    const riskFactors = getRiskFactors();
+
+    return res.status(200).json({
+      success: true,
+      data: riskFactors
+    });
+  } catch (error) {
+    console.error('Error in getRiskFactorsInfo:', error);
+    return res.status(500).json({
+      error: 'Internal server error while fetching risk factors'
     });
   }
 }

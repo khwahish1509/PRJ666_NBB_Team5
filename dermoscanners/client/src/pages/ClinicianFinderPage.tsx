@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { MapPin, Phone, Globe, Navigation, Search, Filter, X, Star, Clock } from 'lucide-react';
-import axios from 'axios';
+import { api } from '../services/api';
 
 interface Clinician {
   id: string;
@@ -86,9 +86,8 @@ export default function ClinicianFinderPage() {
     setError('');
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/clinicians/find`,
+      const response = await api.post(
+        '/clinicians/find',
         {
           latitude: lat,
           longitude: lon,
@@ -97,11 +96,6 @@ export default function ClinicianFinderPage() {
           filters: {
             openNow: filters.openNow,
             topRated: filters.topRated
-          }
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
           }
         }
       );

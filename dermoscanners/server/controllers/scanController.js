@@ -6,7 +6,7 @@ import Scan from '../models/Scan.js';
  */
 export async function createScan(req, res) {
   try {
-    const { result, confidence, processingTime, imageUrl, notes, timestamp } = req.body;
+    const { result, confidence, processingTime, imageUrl, notes, timestamp, insights } = req.body;
     const userId = req.user.id;
 
     // Validate required fields
@@ -25,6 +25,7 @@ export async function createScan(req, res) {
       processingTime,
       imageUrl,
       notes,
+      insights, // Store RAG-generated insights
       timestamp: timestamp || new Date()
     });
 
