@@ -34,6 +34,7 @@ export default function RecommendationPanel({ result }: RecommendationPanelProps
   const [error, setError] = useState(false);
   const [showExportSuccess, setShowExportSuccess] = useState(false);
   const [checkedTips, setCheckedTips] = useState<Set<number>>(new Set());
+  const [showDetails, setShowDetails] = useState(false);
 
   useEffect(() => {
     const fetchRecommendations = async () => {

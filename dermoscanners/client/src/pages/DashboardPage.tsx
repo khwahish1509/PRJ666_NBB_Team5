@@ -144,7 +144,7 @@ export default function DashboardPage() {
           <TrendingUp className="text-indigo-600" size={28} />
           Quick Actions
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
           <button
             onClick={() => navigate('/scan')}
             className="group bg-white p-8 rounded-2xl hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-indigo-300 hover:scale-105"
@@ -154,6 +154,17 @@ export default function DashboardPage() {
             </div>
             <h3 className="text-xl font-bold text-gray-800 mb-2">Scan Product</h3>
             <p className="text-gray-600">Scan barcode or enter manually</p>
+          </button>
+
+          <button
+            onClick={() => navigate('/scan')}
+            className="group bg-white p-8 rounded-2xl hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-purple-300 hover:scale-105"
+          >
+            <div className="bg-gradient-to-br from-purple-100 to-violet-100 w-16 h-16 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <Camera className="text-purple-600" size={32} />
+            </div>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">Scan Skin</h3>
+            <p className="text-gray-600">AI-powered skin analysis</p>
           </button>
 
           <button

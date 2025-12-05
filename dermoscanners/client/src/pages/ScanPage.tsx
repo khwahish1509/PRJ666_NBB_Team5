@@ -10,7 +10,7 @@ import api from '../services/api';
 import { BrowserMultiFormatReader } from '@zxing/library';
 import ResultCard from '../components/scan/ResultCard';
 import InsightsCard, { Insight } from '../components/scan/InsightsCard';
-import RecommendationPanel from '../components/scan/RecommendationPanel';
+import SmartRecommendationPanel from '../components/scan/SmartRecommendationPanel';
 import ClinicianCard from '../components/clinician/ClinicianCard';
 import { saveScan } from '../utils/scanStorage';
 import { useAuth } from '../context/AuthContext';
@@ -547,8 +547,12 @@ export default function ScanPage() {
               />
             )}
 
-            {/* Recommendation Panel */}
-            <RecommendationPanel result={scanResult.result} />
+            {/* Smart Recommendation Panel - Dynamic & Personalized */}
+            <SmartRecommendationPanel 
+              result={scanResult.result}
+              confidence={scanResult.confidence}
+              timestamp={scanResult.timestamp}
+            />
 
             {/* Clinician Finder Card - Show for suspicious or malignant results */}
             {(scanResult.result === 'suspicious' || scanResult.result === 'malignant') && (
